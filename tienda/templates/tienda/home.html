@@ -1,0 +1,104 @@
+{% extends 'tienda/base.html' %}
+{% load static %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+    <!-- Encabezado -->
+    <div style="text-align: center; margin-bottom: 50px;">
+        <h1 style="font-size: 3em; color: #2d3748; margin-bottom: 10px;">Bienvenido a la tienda de Chriskapo</h1>
+        {% if user.is_authenticated %}
+            <p style="color: #4a5568; font-size: 1.2em;">¡Hola {{ user.username }}! Disfrutá explorando nuestros productos.</p>
+        {% else %}
+            <p style="color: #4a5568; font-size: 1.2em;">Iniciá sesión o creá una cuenta para ver los productos.</p>
+        {% endif %}
+    </div>
+
+    <!-- Sección de últimos productos -->
+    <div style="margin-top: 40px;">
+        <h2 style="font-size: 2em; color: #2d3748; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+            Últimos productos
+            <span style="font-size: 1.2em; animation: flame 0.5s infinite alternate;">🔥</span>
+        </h2>
+
+        <!-- Grid de productos -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 30px; padding: 20px 0;">
+            {% for producto in ultimos_productos %}
+            <div style="background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.3s ease, box-shadow 0.3s ease;"
+                 onmouseover="this.style.transform='translateY(-5px)';this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)'"
+                 onmouseout="this.style.transform='';this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)'">
+                
+                <a href="{% url 'tienda:detalle_producto' producto.id %}" style="text-decoration: none; color: inherit;">
+                    <div style="position: relative; padding-top: 75%;">
+                        {% if producto.imagen %}
+                            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}"
+                                 style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                            <img src="{% static 'img/no-image.png' %}" alt="Sin imagen"
+                                 style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
+                        {% endif %}
+                    </div>
+
+                    <div style="padding: 15px;">
+                        <h3 style="margin: 0 0 10px 0; color: #2d3748; font-size: 1.25em;">{{ producto.nombre }}</h3>
+                        <p style="color: #718096; margin: 0 0 15px 0; height: 48px; overflow: hidden;">
+                            {{ producto.descripcion|truncatechars:75 }}
+                        </p>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: bold; color: #48bb78; font-size: 1.25em;">${{ producto.precio }}</span>
+                            <button class="btn-agregar" data-id="{{ producto.id }}"
+                                    style="background: #48bb78; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease;">
+                                🛒
+                            </button>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% empty %}
+            <p style="text-align: center; grid-column: 1/-1; color: #718096;">No hay productos disponibles aún.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes flame {
+    from { transform: scale(1); }
+    to { transform: scale(1.2); }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const botones = document.querySelectorAll(".btn-agregar");
+
+    botones.forEach(boton => {
+        boton.addEventListener("click", (e) => {
+            e.preventDefault(); // Prevenir la navegación al detalle
+            const productoId = boton.dataset.id;
+
+            fetch(`/carrito/agregar/${productoId}/`, {
+                method: "GET",
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const contador = document.getElementById("contador-carrito");
+                    if (contador) contador.textContent = data.total_items;
+
+                    boton.style.background = "#2f855a";
+                    boton.textContent = "✅";
+                    setTimeout(() => {
+                        boton.style.background = "#48bb78";
+                        boton.textContent = "🛒";
+                    }, 1200);
+                } else {
+                    alert("No se pudo agregar al carrito");
+                }
+            })
+            .catch(err => console.error("Error:", err));
+        });
+    });
+});
+</script>
+{% endblock %}

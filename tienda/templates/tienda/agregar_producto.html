@@ -1,0 +1,140 @@
+{% extends 'tienda/base.html' %}
+
+{% block content %}
+<div style="max-width:700px; margin:40px auto; background:white; padding:30px; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.1);">
+    <h2 style="text-align:center; color:#16a34a; margin-bottom:25px;">🛍️ Agregar nuevo producto</h2>
+
+    <form method="POST" enctype="multipart/form-data" style="display:grid; gap:20px;">
+        {% csrf_token %}
+
+        <!-- Nombre del producto -->
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            <label for="{{ form.nombre.id_for_label }}" style="font-weight:600; color:#374151;">
+                📝 Nombre del producto:
+            </label>
+            {{ form.nombre }}
+            {% if form.nombre.errors %}
+                <p style="color:#ef4444; font-size:0.875rem;">{{ form.nombre.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Descripción -->
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            <label for="{{ form.descripcion.id_for_label }}" style="font-weight:600; color:#374151;">
+                📋 Descripción:
+            </label>
+            {{ form.descripcion }}
+            {% if form.descripcion.errors %}
+                <p style="color:#ef4444; font-size:0.875rem;">{{ form.descripcion.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Precio -->
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            <label for="{{ form.precio.id_for_label }}" style="font-weight:600; color:#374151;">
+                💰 Precio:
+            </label>
+            <div style="position:relative;">
+                <span style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#6b7280;">$</span>
+                {{ form.precio }}
+            </div>
+            {% if form.precio.errors %}
+                <p style="color:#ef4444; font-size:0.875rem;">{{ form.precio.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Imagen -->
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            <label for="{{ form.imagen.id_for_label }}" style="font-weight:600; color:#374151;">
+                �️ Imagen del producto:
+            </label>
+            <div style="display:flex; gap:15px; align-items:start;">
+                <div style="flex:1;">
+                    {{ form.imagen }}
+                    {% if form.imagen.errors %}
+                        <p style="color:#ef4444; font-size:0.875rem;">{{ form.imagen.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div id="preview-container" style="display:none; width:100px; height:100px; border-radius:8px; overflow:hidden;">
+                    <img id="preview-image" src="#" alt="Vista previa" style="width:100%; height:100%; object-fit:cover;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones -->
+        <div style="display:flex; gap:15px; margin-top:10px;">
+            <a href="{% url 'tienda:productos' %}" style="flex:1; text-align:center; padding:12px; border-radius:8px; border:2px solid #d1d5db; color:#4b5563; text-decoration:none; font-weight:600;">
+                Cancelar
+            </a>
+            <button type="submit" style="flex:1; background:#16a34a; color:white; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:600; transition:all 0.3s ease;">
+                Publicar producto
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    input[type="text"],
+    input[type="number"],
+    textarea {
+        width: 100%;
+        padding: 8px 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    textarea:focus {
+        outline: none;
+        border-color: #16a34a;
+    }
+
+    input[type="number"] {
+        padding-left: 25px;
+    }
+
+    textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    input[type="file"] {
+        width: 100%;
+        padding: 8px;
+        border: 2px dashed #e5e7eb;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    button[type="submit"]:hover {
+        background: #15803d;
+        transform: translateY(-2px);
+    }
+</style>
+
+<script>
+    // Vista previa de imagen
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputImagen = document.querySelector('input[type="file"]');
+        const previewContainer = document.getElementById('preview-container');
+        const previewImage = document.getElementById('preview-image');
+
+        inputImagen.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}

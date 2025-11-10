@@ -1,0 +1,100 @@
+{% extends 'tienda/base.html' %}
+
+{% block content %}
+<div style="max-width:800px; margin:40px auto; padding:0 20px;">
+    <h2 style="text-align:center; color:#16a34a; margin-bottom:30px;">💳 Finalizar compra</h2>
+
+    <!-- Resumen del pedido -->
+    <div style="background:white; border-radius:12px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.1); margin-bottom:30px;">
+        <h3 style="color:#374151; margin-bottom:15px;">📋 Resumen del pedido</h3>
+        
+        <div style="max-height:300px; overflow-y:auto; margin-bottom:20px;">
+            {% for item in items %}
+            <div style="display:flex; gap:15px; padding:10px 0; border-bottom:1px solid #e5e7eb;">
+                {% if item.producto.imagen %}
+                    <img src="{{ item.producto.imagen.url }}" alt="{{ item.producto.nombre }}" 
+                         style="width:60px; height:60px; object-fit:cover; border-radius:8px;">
+                {% endif %}
+                <div style="flex:1;">
+                    <h4 style="margin:0; color:#111827;">{{ item.producto.nombre }}</h4>
+                    <p style="color:#6b7280; font-size:0.9rem; margin:5px 0;">{{ item.producto.descripcion|truncatechars:80 }}</p>
+                    <div style="display:flex; justify-content:space-between; margin-top:5px;">
+                        <span>Cantidad: {{ item.cantidad }}</span>
+                        <span>${{ item.producto.precio }} c/u</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div style="border-top:2px solid #e5e7eb; padding-top:15px; text-align:right;">
+            <p style="font-size:1.2rem; font-weight:600; color:#16a34a;">
+                Total a pagar: ${{ total|floatformat:2 }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Formulario de pago -->
+    <div style="background:white; border-radius:12px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+        <h3 style="color:#374151; margin-bottom:20px;">💳 Información de pago</h3>
+        
+        <form method="post" action="{% url 'tienda:procesar_pago' %}" style="display:grid; gap:20px;">
+            {% csrf_token %}
+            <!-- Información personal -->
+            <div style="display:grid; gap:15px;">
+                <div>
+                    <label for="nombre" style="display:block; margin-bottom:5px; color:#374151;">Nombre completo</label>
+                    <input type="text" id="nombre" name="nombre" required
+                           style="width:100%; padding:8px; border:2px solid #e5e7eb; border-radius:8px;">
+                </div>
+                
+                <div>
+                    <label for="email" style="display:block; margin-bottom:5px; color:#374151;">Email</label>
+                    <input type="email" id="email" name="email" required
+                           style="width:100%; padding:8px; border:2px solid #e5e7eb; border-radius:8px;">
+                </div>
+            </div>
+
+            <!-- Información de la tarjeta -->
+            <div style="display:grid; gap:15px;">
+                <div>
+                    <label for="tarjeta" style="display:block; margin-bottom:5px; color:#374151;">Número de tarjeta</label>
+                    <input type="text" id="tarjeta" name="tarjeta" required pattern="[0-9]{16}"
+                           style="width:100%; padding:8px; border:2px solid #e5e7eb; border-radius:8px;">
+                </div>
+
+                <div style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+                    <div>
+                        <label for="vencimiento" style="display:block; margin-bottom:5px; color:#374151;">Fecha de vencimiento</label>
+                        <input type="text" id="vencimiento" name="vencimiento" required placeholder="MM/AA"
+                               style="width:100%; padding:8px; border:2px solid #e5e7eb; border-radius:8px;">
+                    </div>
+                    <div>
+                        <label for="cvv" style="display:block; margin-bottom:5px; color:#374151;">CVV</label>
+                        <input type="text" id="cvv" name="cvv" required pattern="[0-9]{3,4}"
+                               style="width:100%; padding:8px; border:2px solid #e5e7eb; border-radius:8px;">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" 
+                    style="background:#16a34a; color:white; padding:12px; border:none; border-radius:8px; 
+                           font-weight:600; cursor:pointer; transition:all 0.3s ease;">
+                Confirmar pago
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+    input:focus {
+        outline: none;
+        border-color: #16a34a;
+    }
+
+    button[type="submit"]:hover {
+        background: #15803d;
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}

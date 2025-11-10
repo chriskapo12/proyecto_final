@@ -1,0 +1,93 @@
+{% extends 'tienda/base.html' %}
+
+{% block content %}
+<h2 style="text-align:center; margin-top:20px;">🛒 Tu carrito</h2>
+
+{% if items %}
+<table style="width:80%; margin:30px auto; border-collapse:collapse;">
+  <tr style="background:#f3f4f6;">
+    <th>Producto</th>
+    <th>Precio</th>
+    <th>Cantidad</th>
+    <th>Subtotal</th>
+    <th></th>
+  </tr>
+  {% for item in items %}
+  <tr style="text-align:center; border-bottom:1px solid #ddd;">
+    <td>{{ item.producto.nombre }}</td>
+    <td>${{ item.producto.precio }}</td>
+    <td>
+      <button class="btn-cantidad" data-id="{{ item.producto.id }}" data-accion="restar"
+              style="border:none; background:#ef4444; color:white; padding:4px 8px; border-radius:5px; cursor:pointer;">➖</button>
+      <span id="cantidad-{{ item.producto.id }}">{{ item.cantidad }}</span>
+      <button class="btn-cantidad" data-id="{{ item.producto.id }}" data-accion="sumar"
+              style="border:none; background:#16a34a; color:white; padding:4px 8px; border-radius:5px; cursor:pointer;">➕</button>
+    </td>
+  <td>$<span id="subtotal-{{ item.producto.id }}">{{ item.subtotal|floatformat:2 }}</span></td>
+
+    <!-- 🔧 CORREGIDO: agregar 'tienda:' -->
+    <td>
+      <a href="{% url 'tienda:eliminar_del_carrito' item.producto.id %}" 
+         style="color:white; background:#ef4444; padding:4px 10px; border-radius:6px; text-decoration:none;">
+         🗑
+      </a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h3 style="text-align:center;">Total: $<span id="total">{{ total|floatformat:2 }}</span></h3>
+
+{% else %}
+<p style="text-align:center;">Tu carrito está vacío 🛍️</p>
+{% endif %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // helper para leer cookie CSRF
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  const botones = document.querySelectorAll(".btn-cantidad");
+
+  botones.forEach(boton => {
+    boton.addEventListener("click", function() {
+      const productoId = this.dataset.id;
+      const accion = this.dataset.accion;
+
+      fetch("{% url 'tienda:actualizar_cantidad' %}", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": getCookie('csrftoken'),
+          "X-Requested-With": "XMLHttpRequest",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ producto_id: productoId, accion: accion })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) return alert(data.error);
+
+        // Actualiza valores en pantalla
+        document.getElementById(`cantidad-${productoId}`).textContent = data.cantidad;
+        document.getElementById(`subtotal-${productoId}`).textContent = data.subtotal.toFixed(2);
+        document.getElementById("total").textContent = data.total.toFixed(2);
+      })
+      .catch(err => console.error("Error:", err));
+    });
+  });
+});
+</script>
+{% endblock %}

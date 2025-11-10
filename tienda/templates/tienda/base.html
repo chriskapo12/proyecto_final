@@ -1,0 +1,465 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Tienda Online{% endblock %}</title>
+
+    <!-- Fuente moderna -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* 🔧 Reset y estructura */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f9fafb;
+            color: #111827;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* 🔝 Header fijo */
+        header {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: auto;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: #16a34a;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: #374151;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover { color: #16a34a; }
+
+        /* Botones */
+        .btn-login, .btn-logout {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-login:hover, .btn-logout:hover {
+            background: #15803d;
+            transform: translateY(-2px);
+        }
+
+        /* 🛒 Carrito */
+        .carrito {
+            position: relative;
+            font-size: 24px;
+            color: #16a34a;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .carrito:hover { transform: scale(1.1); }
+
+        .contador-carrito {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+            background: #ef4444;
+            color: white;
+            font-size: 12px;
+            padding: 3px 7px;
+            border-radius: 50%;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        /* 📦 Contenido principal */
+        main {
+            flex: 1;
+            padding: 40px 20px;
+            max-width: 1200px;
+            margin: auto;
+            width: 100%;
+        }
+
+        /* 🦶 Footer */
+        footer {
+            background: #111827;
+            color: #d1d5db;
+            text-align: center;
+            padding: 25px 0;
+            font-size: 0.9rem;
+            margin-top: 50px;
+        }
+
+        footer span { color: #22c55e; font-weight: 600; }
+
+        /* 🧩 Panel lateral del carrito */
+        .carrito-overlay {
+            position: fixed;
+            top: 0; right: 0;
+            width: 0;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            overflow: hidden;
+            transition: width 0.4s ease;
+            z-index: 300;
+        }
+
+        .carrito-contenido {
+            position: absolute;
+            top: 0; right: 0;
+            width: 400px;
+            max-width: 90%;
+            height: 100%;
+            background: #fff;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+            transform: translateX(100%);
+            transition: transform 0.4s ease;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .carrito-overlay.activo { width: 100%; }
+        .carrito-overlay.activo .carrito-contenido { transform: translateX(0); }
+
+        .carrito-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+
+        .carrito-header h3 { color: #111827; font-weight: 600; }
+
+        .cerrar-carrito {
+            cursor: pointer;
+            color: #ef4444;
+            font-size: 22px;
+            font-weight: bold;
+            transition: transform 0.3s;
+        }
+        .cerrar-carrito:hover { transform: rotate(90deg); }
+
+        .carrito-items {
+            flex: 1;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 10px 0;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .item img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .item-info { flex: 1; }
+
+        .item-info h4 { font-size: 15px; color: #111827; }
+        .item-info p { font-size: 13px; color: #6b7280; }
+
+        .controles-cantidad {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .controles-cantidad button {
+            background: #16a34a;
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .controles-cantidad span {
+            min-width: 20px;
+            text-align: center;
+            display: inline-block;
+        }
+
+        .carrito-footer {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        @media (max-width: 700px) {
+            .carrito-contenido { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <nav>
+        <a href="{% url 'tienda:home' %}" class="logo">🛍 TuTienda</a>
+        <div class="nav-links">
+            <a href="{% url 'tienda:productos' %}">Productos</a>
+
+            {% if user.is_authenticated %}
+                <!-- 🛒 Carrito único y funcional -->
+                <div class="carrito" id="abrir-carrito" title="Ver carrito">
+                    🛒
+                    <span id="contador-carrito" class="contador-carrito">
+                        {{ user.carrito.total_items|default:0 }}
+                    </span>
+                </div>
+
+                <a href="{% url 'tienda:logout' %}" class="btn-logout">Cerrar sesión</a>
+            {% else %}
+                <a href="{% url 'tienda:login' %}" class="btn-login">Iniciar sesión</a>
+                <a href="{% url 'tienda:register' %}" class="btn-login" style="background:#2563eb;">Registrarse</a>
+            {% endif %}
+        </div>
+    </nav>
+</header>
+
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<!-- 🛍 Panel lateral del carrito -->
+<div class="carrito-overlay" id="carrito-overlay">
+    <div class="carrito-contenido">
+        <div class="carrito-header">
+            <h3>🛒 Tu carrito</h3>
+            <span class="cerrar-carrito" id="cerrar-carrito">×</span>
+        </div>
+
+        <div class="carrito-items" id="carrito-items">
+            <p style="color:#6b7280;">Tu carrito está vacío</p>
+        </div>
+
+        <div class="carrito-footer" style="flex-direction:column; gap:15px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                <span style="font-size:1.1rem;">Total:</span> 
+                <span id="total-carrito" style="font-size:1.2rem; color:#16a34a; font-weight:bold;">$0.00</span>
+            </div>
+            <a href="{% url 'tienda:procesar_pago' %}" id="btn-pagar" 
+                    style="width:100%; background:linear-gradient(135deg, #22c55e, #16a34a); color:white; 
+                           text-decoration: none; padding:15px; border-radius:12px; font-size:1.1em;
+                           cursor:pointer; font-weight:600; display:flex; justify-content:center; 
+                           align-items:center; gap:12px; transition:all 0.3s ease; 
+                           box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+                <span style="font-size:1.2em;">💳</span>
+                Pagar ahora
+            </a>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <p>© 2025 <span>TuTienda</span>. Todos los derechos reservados para chriskapo.</p>
+</footer>
+
+<!-- ⚙️ Script funcional -->
+<script>
+    const abrir = document.getElementById('abrir-carrito');
+    const cerrar = document.getElementById('cerrar-carrito');
+    const overlay = document.getElementById('carrito-overlay');
+    const contenedorItems = document.getElementById('carrito-items');
+    const totalCarrito = document.getElementById('total-carrito');
+    const contadorCarrito = document.getElementById('contador-carrito');
+
+    // Abrir carrito
+    abrir?.addEventListener('click', () => {
+        overlay.classList.add('activo');
+        cargarCarrito();
+    });
+
+    // Cerrar carrito
+    cerrar?.addEventListener('click', () => overlay.classList.remove('activo'));
+    overlay?.addEventListener('click', e => {
+        if (e.target === overlay) overlay.classList.remove('activo');
+    });
+
+    // Cargar carrito desde Django
+    function cargarCarrito() {
+        fetch("{% url 'tienda:obtener_carrito_ajax' %}")
+            .then(res => res.json())
+            .then(data => {
+                contenedorItems.innerHTML = "";
+                if (!data.items || data.items.length === 0) {
+                    contenedorItems.innerHTML = "<p style='color:#6b7280;'>Tu carrito está vacío</p>";
+                } else {
+                    data.items.forEach(item => {
+                        const div = document.createElement("div");
+                        div.classList.add("item");
+                        div.innerHTML = `
+                            <img src="${item.imagen || '{% static "img/placeholder.png" %}'}" alt="">
+                            <div class="item-info">
+                                <h4>${item.nombre}</h4>
+                                <p>Precio unitario: $${item.precio.toFixed(2)}</p>
+                                <div class="controles-cantidad">
+                                    <button class="btn-restar" data-producto-id="${item.producto_id}">-</button>
+                                    <span class="cantidad">${item.cantidad}</span>
+                                    <button class="btn-sumar" data-producto-id="${item.producto_id}">+</button>
+                                </div>
+                                <strong>Subtotal: $${item.subtotal.toFixed(2)}</strong>
+                                <button class="btn-eliminar" data-producto-id="${item.producto_id}"
+                                    style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; margin-top:5px;">
+                                    🗑 Eliminar
+                                </button>
+                            </div>
+                        `;
+                        contenedorItems.appendChild(div);
+                    });
+
+                    // Eventos para botones (usamos data-producto-id)
+                    document.querySelectorAll('.btn-eliminar').forEach(btn => {
+                        btn.addEventListener('click', () => eliminarDelCarrito(btn.dataset.productoId));
+                    });
+                    document.querySelectorAll('.btn-sumar').forEach(btn => {
+                        btn.addEventListener('click', () => actualizarCantidad(btn.dataset.productoId, 'sumar'));
+                    });
+                    document.querySelectorAll('.btn-restar').forEach(btn => {
+                        btn.addEventListener('click', () => actualizarCantidad(btn.dataset.productoId, 'restar'));
+                    });
+                }
+
+                totalCarrito.textContent = `$${data.total.toFixed(2)}`;
+                contadorCarrito.textContent = data.total_items;
+
+                // Actualizar estado del enlace de pago
+                const btnPagar = document.getElementById('btn-pagar');
+                if (data.items && data.items.length > 0) {
+                    btnPagar.style.opacity = '1';
+                    btnPagar.style.pointerEvents = 'all';
+                    btnPagar.style.cursor = 'pointer';
+                    btnPagar.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+                    btnPagar.href = "{% url 'tienda:procesar_pago' %}";
+                    btnPagar.onmouseover = () => {
+                        btnPagar.style.transform = 'translateY(-2px)';
+                        btnPagar.style.boxShadow = '0 6px 12px rgba(0,0,0,0.15)';
+                        btnPagar.style.background = 'linear-gradient(135deg, #2ed573, #15803d)';
+                    };
+                    btnPagar.onmouseout = () => {
+                        btnPagar.style.transform = '';
+                        btnPagar.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+                        btnPagar.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+                    };
+                } else {
+                    btnPagar.style.opacity = '0.5';
+                    btnPagar.style.pointerEvents = 'none';
+                    btnPagar.style.cursor = 'not-allowed';
+                    btnPagar.href = '#';
+                    btnPagar.style.background = '#9ca3af';
+                    btnPagar.onmouseover = null;
+                    btnPagar.onmouseout = null;
+                    btnPagar.style.transform = '';
+                    btnPagar.style.boxShadow = 'none';
+                }
+            })
+            .catch(err => console.error("Error al obtener carrito:", err));
+    }
+
+                    // helper para leer cookie CSRF
+                    function getCookie(name) {
+                        let cookieValue = null;
+                        if (document.cookie && document.cookie !== '') {
+                            const cookies = document.cookie.split(';');
+                            for (let i = 0; i < cookies.length; i++) {
+                                const cookie = cookies[i].trim();
+                                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+
+                    // Eliminar producto
+                    function eliminarDelCarrito(productoId) {
+                        fetch(`/carrito/eliminar/${productoId}/`, {
+                            method: 'GET',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                cargarCarrito();
+                                contadorCarrito.textContent = data.total_items;
+                            }
+                        })
+                        .catch(err => console.error("Error al eliminar del carrito:", err));
+                    }
+
+                    // Actualizar cantidad
+                    function actualizarCantidad(productoId, accion) {
+                        fetch("{% url 'tienda:actualizar_cantidad' %}", {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body: JSON.stringify({ producto_id: productoId, accion: accion })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.error) return console.error(data.error);
+
+                            const itemDiv = document.querySelector(`.btn-sumar[data-producto-id='${productoId}']`).closest('.item');
+                            itemDiv.querySelector('.cantidad').textContent = data.cantidad;
+                            itemDiv.querySelector('strong').textContent = `Subtotal: $${data.subtotal.toFixed(2)}`;
+
+                            totalCarrito.textContent = `$${data.total.toFixed(2)}`;
+                            contadorCarrito.textContent = data.total_items;
+                        })
+                        .catch(err => console.error("Error al actualizar cantidad:", err));
+                    }
+</script>
+
+
+
+
+</body>
+</html>

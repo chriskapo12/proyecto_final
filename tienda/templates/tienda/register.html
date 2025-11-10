@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crear cuenta | MiniMarket</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .register-card {
+      background: white;
+      width: 380px;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      padding: 35px 30px;
+      text-align: center;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .register-card h2 {
+      color: #333;
+      margin-bottom: 25px;
+      font-size: 22px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: 0.2s;
+    }
+
+    input:focus {
+      border-color: #22c55e;
+      outline: none;
+      box-shadow: 0 0 3px #22c55e;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #22c55e;
+      color: white;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      margin-top: 10px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #15803d;
+    }
+
+    .extra {
+      margin-top: 18px;
+      font-size: 14px;
+    }
+
+    .extra a {
+      color: #16a34a;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .extra a:hover {
+      text-decoration: underline;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="register-card">
+    <h2>Crear cuenta</h2>
+       {% if messages %}
+  <div class="messages">
+    {% for message in messages %}
+      <div class="alert {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+    <form method="POST">
+      {% csrf_token %}
+      <input type="text" name="username" placeholder="Nombre de usuario" required>
+      <input type="email" name="email" placeholder="Correo electrónico" required>
+      <input type="password" name="password" placeholder="Contraseña" required>
+      <button type="submit">Registrarme</button>
+    </form>
+    <div class="extra">
+      <p>¿Ya tenés cuenta? <a href="{% url 'tienda:login' %}">Iniciar sesión</a></p>
+    </div>
+  </div>
+</body>
+</html>
