@@ -36,52 +36,59 @@
 
     <!-- Formulario de pago -->
     <div style="background:white; border-radius:12px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-        <h3 style="color:#374151; margin-bottom:20px;">💳 Información de pago</h3>
+        <h3 style="color:#374151; margin-bottom:20px;">💳 Selecciona tu método de pago</h3>
         
         <form method="post" action="{% url 'tienda:procesar_pago' %}" style="display:grid; gap:20px;">
             {% csrf_token %}
-            <!-- Información personal -->
+            
+            <!-- Selección de método de pago -->
+            <div style="display:grid; gap:12px;">
+                <!-- Usamos input + label como hermanos para poder estilizar solo la opción seleccionada -->
+                <input class="payment-input" type="radio" id="mp-radio" name="metodo_pago" value="mercadopago" checked>
+                <label for="mp-radio" class="payment-option" style="display:flex; align-items:center; padding:12px; border:2px solid #e5e7eb; border-radius:8px; cursor:pointer; background:#ffffff; transition:all 0.2s ease;">
+                    <span class="dot" style="display:inline-block; width:18px; height:18px; border-radius:50%; border:2px solid #94a3b8; margin-right:10px; box-sizing:border-box;"></span>
+                    <div style="flex:1;">
+                        <span style="font-weight:600; color:#374151;">💳 Mercado Pago</span>
+                        <p style="color:#6b7280; font-size:0.9rem; margin:5px 0 0 0;">Transferencia, tarjeta de crédito, efectivo y más</p>
+                    </div>
+                </label>
+
+                <input class="payment-input" type="radio" id="local-radio" name="metodo_pago" value="tarjeta_local">
+                <label for="local-radio" class="payment-option" style="display:flex; align-items:center; padding:12px; border:2px solid #e5e7eb; border-radius:8px; cursor:pointer; background:#ffffff; transition:all 0.2s ease;">
+                    <span class="dot" style="display:inline-block; width:18px; height:18px; border-radius:50%; border:2px solid #94a3b8; margin-right:10px; box-sizing:border-box;"></span>
+                    <div style="flex:1;">
+                        <span style="font-weight:600; color:#374151;">🏪 Tarjeta local (demo)</span>
+                        <p style="color:#6b7280; font-size:0.9rem; margin:5px 0 0 0;">Simulación de pago con tarjeta (solo para pruebas)</p>
+                    </div>
+                </label>
+            </div>
+            
+            <!-- Información personal (requerida) -->
             <div style="display:grid; gap:15px;">
+                <h4 style="color:#374151; margin:0;">📋 Información de envío</h4>
                 <div>
-                    <label for="nombre" style="display:block; margin-bottom:5px; color:#374151;">Nombre completo</label>
-                    <input type="text" id="nombre" name="nombre" required
+                    <label for="nombre" style="display:block; margin-bottom:5px; color:#374151; font-weight:500;">Nombre completo *</label>
+                        <input type="text" id="nombre" name="nombre" required placeholder="Ej: Juan Pérez" value="{% if user.first_name or user.last_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}"
                            style="width:100%; padding:8px; border:2px solid #e5e7eb; border-radius:8px;">
                 </div>
                 
                 <div>
-                    <label for="email" style="display:block; margin-bottom:5px; color:#374151;">Email</label>
-                    <input type="email" id="email" name="email" required
+                    <label for="email" style="display:block; margin-bottom:5px; color:#374151; font-weight:500;">Email *</label>
+                    <input type="email" id="email" name="email" required value="{{ user.email }}"
                            style="width:100%; padding:8px; border:2px solid #e5e7eb; border-radius:8px;">
                 </div>
             </div>
 
-            <!-- Información de la tarjeta -->
-            <div style="display:grid; gap:15px;">
-                <div>
-                    <label for="tarjeta" style="display:block; margin-bottom:5px; color:#374151;">Número de tarjeta</label>
-                    <input type="text" id="tarjeta" name="tarjeta" required pattern="[0-9]{16}"
-                           style="width:100%; padding:8px; border:2px solid #e5e7eb; border-radius:8px;">
-                </div>
-
-                <div style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
-                    <div>
-                        <label for="vencimiento" style="display:block; margin-bottom:5px; color:#374151;">Fecha de vencimiento</label>
-                        <input type="text" id="vencimiento" name="vencimiento" required placeholder="MM/AA"
-                               style="width:100%; padding:8px; border:2px solid #e5e7eb; border-radius:8px;">
-                    </div>
-                    <div>
-                        <label for="cvv" style="display:block; margin-bottom:5px; color:#374151;">CVV</label>
-                        <input type="text" id="cvv" name="cvv" required pattern="[0-9]{3,4}"
-                               style="width:100%; padding:8px; border:2px solid #e5e7eb; border-radius:8px;">
-                    </div>
-                </div>
+            <div style="display:flex; gap:12px;">
+                <a href="{% url 'tienda:ver_carrito' %}" style="flex:1; text-align:center; padding:12px; border:2px solid #d1d5db; border-radius:8px; color:#4b5563; text-decoration:none; font-weight:600; transition:all 0.3s ease;">
+                    ← Volver al carrito
+                </a>
+                <button type="submit" 
+                        style="flex:1; background:#16a34a; color:white; padding:12px; border:none; border-radius:8px; 
+                               font-weight:600; cursor:pointer; transition:all 0.3s ease;">
+                    Continuar al pago →
+                </button>
             </div>
-
-            <button type="submit" 
-                    style="background:#16a34a; color:white; padding:12px; border:none; border-radius:8px; 
-                           font-weight:600; cursor:pointer; transition:all 0.3s ease;">
-                Confirmar pago
-            </button>
         </form>
     </div>
 </div>
@@ -96,5 +103,19 @@
         background: #15803d;
         transform: translateY(-2px);
     }
+    /* Estilos para opciones de pago: solo la opción seleccionada se pone verde */
+    input.payment-input {
+        position: absolute;
+        left: -9999px;
+    }
+    input.payment-input:checked + label.payment-option {
+        border-color: #16a34a;
+        background: #f0fdf4;
+    }
+    input.payment-input:checked + label.payment-option .dot {
+        background: #16a34a;
+        border-color: #16a34a;
+    }
+    label.payment-option { transition: all 0.15s ease; }
 </style>
 {% endblock %}

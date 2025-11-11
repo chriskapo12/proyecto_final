@@ -20,6 +20,58 @@
             flex-direction: column;
             min-height: 100vh;
         }
+        /* Transiciones suaves al cambiar tema */
+        body, header, footer, .producto-card, .producto-card a > div:last-child, .filter-panel > div { transition: background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease; }
+
+        /* Modo oscuro: se aplica añadiendo la clase .dark-mode al body */
+        body.dark-mode {
+            background-color: #000000;
+            color: #e5e7eb;
+        }
+        /* Header y navegación */
+        body.dark-mode header { background: #0b1220; box-shadow: 0 2px 8px rgba(0,0,0,0.6); }
+        body.dark-mode .nav-links a { color: #e5e7eb; }
+        body.dark-mode .logo { color: #22c55e; }
+
+        /* Footer y carrito */
+        body.dark-mode footer { background: #0b1220; color: #cbd5e1; }
+        body.dark-mode .carrito-contenido { background: #0f1724; color: #e5e7eb; }
+
+        /* Texto del carrito */
+        body.dark-mode .item-info h4 { color: #e5e7eb; }
+        body.dark-mode .item-info p { color: #cbd5e1; }
+
+    /* Tarjetas de producto (home, productos) */
+    /* Mantener la caja exterior ligera y separar claramente la zona de imagen y la zona de info */
+    body.dark-mode .producto-card { background: transparent; box-shadow: 0 8px 20px rgba(2,6,23,0.6); border-radius: 14px; overflow: hidden; }
+    /* Zona de imagen: mantener fondo claro para que las imágenes se vean nítidas */
+    body.dark-mode .producto-card a > div:first-child { background: #e5e7eb; }
+    /* Zona de información: fondo oscuro y texto claro */
+    body.dark-mode .producto-card a > div:last-child { background: #071226; color: #e5e7eb; }
+    body.dark-mode .producto-card a > div:last-child .font-category, body.dark-mode .producto-card a > div:last-child .producto-nombre { color: #cbd5e1; }
+    body.dark-mode .producto-card a > div:last-child .producto-nombre { color: #e5e7eb; font-weight:700; }
+    body.dark-mode .producto-card .btn-agregar { background: #16a34a; color: white; box-shadow: 0 4px 10px rgba(2,6,23,0.5); }
+
+    /* Panel de filtro */
+    body.dark-mode .filter-panel > div { background: #ffffff; color: #0b1220; box-shadow: 0 4px 14px rgba(0,0,0,0.06); }
+    /* Para el panel de filtro preferimos mantener los controles claros (mejor contraste con el fondo oscuro general) */
+    body.dark-mode select, body.dark-mode input, body.dark-mode textarea { background: #f8fafc; color: #0b1220; border: 1px solid #e6edf3; }
+
+        /* Tablas y listados */
+        body.dark-mode table { color: #e5e7eb; }
+        body.dark-mode table tr { border-color: rgba(255,255,255,0.04); }
+        body.dark-mode th { background: rgba(255,255,255,0.02); color: #e5e7eb; }
+
+        /* Botones principales: mantenemos verde pero con mayor contraste */
+        body.dark-mode .btn-login, body.dark-mode .btn-logout { background: linear-gradient(135deg, #2ed573, #16a34a); }
+
+        /* Inputs y formularios */
+        body.dark-mode input::placeholder, body.dark-mode textarea::placeholder { color: #94a3b8; }
+
+        /* Otros ajustes generales */
+        body.dark-mode .contador-carrito { background: #ef4444; }
+        body.dark-mode .carrito { color: #22c55e; }
+        body.dark-mode a { color: #60f089; }
 
         /* 🔝 Header fijo */
         header {
@@ -162,7 +214,7 @@
             padding-bottom: 10px;
         }
 
-        .carrito-header h3 { color: #111827; font-weight: 600; }
+    .carrito-header h3 { color: #111827; font-weight: 600; }
 
         .cerrar-carrito {
             cursor: pointer;
@@ -199,8 +251,8 @@
 
         .item-info { flex: 1; }
 
-        .item-info h4 { font-size: 15px; color: #111827; }
-        .item-info p { font-size: 13px; color: #6b7280; }
+    .item-info h4 { font-size: 15px; color: #111827; }
+    .item-info p { font-size: 13px; color: #6b7280; }
 
         .controles-cantidad {
             display: flex;
@@ -242,9 +294,13 @@
 
 <header>
     <nav>
-    <a href="{% url 'tienda:home' %}" class="logo">🛍 Bebidas Oeste</a>
+    <a href="{% url 'tienda:home' %}" class="logo"><3 Bebidas Oeste</a>
         <div class="nav-links">
             <a href="{% url 'tienda:productos' %}">Productos</a>
+            <!-- Toggle de tema claro/oscuro -->
+            <button id="theme-toggle" aria-label="Alternar tema" title="Alternar tema" style="background:transparent;border:none;cursor:pointer;font-size:18px;color:inherit;padding:6px;">
+                🌙
+            </button>
 
             {% if user.is_authenticated %}
                 <!-- 🛒 Carrito único y funcional -->
@@ -299,7 +355,7 @@
 </div>
 
 <footer>
-    <p>© 2025 <span>TuTienda</span>. Todos los derechos reservados para chriskapo.</p>
+    <p>© 2025 <span>TuTienda</span>. Todos los derechos reservados para chriskapo y blasphemian.</p>
 </footer>
 
 <!-- ⚙️ Script funcional -->
@@ -459,6 +515,25 @@
                         })
                         .catch(err => console.error("Error al actualizar cantidad:", err));
                     }
+
+                    // Tema claro/oscuro: persistir en localStorage
+                    const themeToggle = document.getElementById('theme-toggle');
+                    function applyTheme(theme) {
+                        if (theme === 'dark') {
+                            document.body.classList.add('dark-mode');
+                            if (themeToggle) themeToggle.textContent = '☀️';
+                        } else {
+                            document.body.classList.remove('dark-mode');
+                            if (themeToggle) themeToggle.textContent = '🌙';
+                        }
+                    }
+                    const savedTheme = localStorage.getItem('theme') || 'light';
+                    applyTheme(savedTheme);
+                    themeToggle?.addEventListener('click', () => {
+                        const next = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
+                        localStorage.setItem('theme', next);
+                        applyTheme(next);
+                    });
 </script>
 
 

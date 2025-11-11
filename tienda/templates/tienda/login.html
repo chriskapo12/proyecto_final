@@ -95,15 +95,7 @@
 <body>
   <div class="login-card">
     <h2>Iniciar sesión</h2>
-    {% if messages %}
-  <div class="messages">
-    {% for message in messages %}
-      <div class="alert {{ message.tags }}">{{ message }}</div>
-    {% endfor %}
-  </div>
-{% endif %}
-
-<form method="POST">
+    <form method="POST">
     {% csrf_token %}
     <input type="text" name="username" placeholder="Usuario o correo" required>
     <input type="password" name="password" placeholder="Contraseña" required>

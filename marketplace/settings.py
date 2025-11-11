@@ -161,7 +161,7 @@ ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = 'optional'
 ACCOUNT_SIGNUP_EMAIL_ENTER_TWICE = False  # No pedir email dos veces
-SOCIALACCOUNT_ADAPTER = 'allauth.socialaccount.adapter.DefaultSocialAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'marketplace.social_adapter.MySocialAccountAdapter'
 
 # Configuración por defecto para proveedores sociales
 SOCIALACCOUNT_PROVIDERS = {
@@ -182,3 +182,13 @@ ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter'
 
 # Redirigir al home después del login social
 SOCIALACCOUNT_LOGIN_ON_GET = True  # Permitir login directo sin confirmación extra
+
+# ==================== CONFIGURACIÓN DE MERCADO PAGO ====================
+# Access Token de Mercado Pago (obtén uno desde tu panel de desarrollador)
+# Para desarrollo usa: https://developer.mercadopago.com/panel
+MERCADOPAGO_ACCESS_TOKEN = 'APP_USR-6648621459860687-111112-6525bfe39eb274aa4986f608cece6d9a-2981232220'  # Reemplaza con tu token real
+
+# URL de retorno después del pago (actualiza según tu dominio)
+MERCADOPAGO_SUCCESS_URL = 'http://127.0.0.1:8000/pago-exitoso/'
+MERCADOPAGO_FAILURE_URL = 'http://127.0.0.1:8000/pago-fallido/'
+MERCADOPAGO_PENDING_URL = 'http://127.0.0.1:8000/pago-pendiente/'

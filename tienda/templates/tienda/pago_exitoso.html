@@ -1,0 +1,38 @@
+{% extends 'tienda/base.html' %}
+
+{% block content %}
+<div style="max-width:600px; margin:80px auto; padding:0 20px; text-align:center;">
+    <div style="background:white; border-radius:12px; padding:40px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+        <div style="font-size:4em; margin-bottom:20px;">✅</div>
+        
+        <h1 style="color:#16a34a; margin-bottom:10px; font-size:2em;">¡Pago exitoso!</h1>
+        
+        <p style="color:#6b7280; font-size:1.1em; margin-bottom:30px;">
+            Tu compra ha sido procesada correctamente. Recibirás un correo de confirmación en breve.
+        </p>
+        
+        <div style="background:#f0fdf4; border:2px solid #16a34a; border-radius:8px; padding:20px; margin-bottom:30px; text-align:left;">
+            <p style="color:#374151; margin:0;"><strong>📦 Tu pedido ha sido confirmado</strong></p>
+            <p style="color:#6b7280; margin:10px 0 0 0; font-size:0.95em;">
+                Podrás rastrear el estado de tu pedido desde tu cuenta.
+            </p>
+        </div>
+        
+        <div style="display:flex; gap:12px; flex-direction:column;">
+            <a href="{% url 'tienda:home' %}" style="background:#16a34a; color:white; padding:12px; border-radius:8px; text-decoration:none; font-weight:600; display:inline-block; transition:all 0.3s ease;">
+                🏠 Volver a la tienda
+            </a>
+            <a href="{% url 'tienda:productos' %}" style="background:#4b5563; color:white; padding:12px; border-radius:8px; text-decoration:none; font-weight:600; display:inline-block; transition:all 0.3s ease;">
+                🛍️ Continuar comprando
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    a:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}

@@ -15,20 +15,22 @@
 
 <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:20px; margin-top:20px;">
   {% for producto in productos %}
-  <div style="border:1px solid #ddd; border-radius:10px; width:220px; text-align:center; padding:15px; box-shadow:0 2px 5px rgba(0,0,0,0.1); transition: transform 0.3s ease, box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
-    <a href="{% url 'tienda:detalle_producto' producto.id %}" style="text-decoration: none; color: inherit;">
+  <div style="border:1px solid #ddd; border-radius:10px; width:220px; display:flex; flex-direction:column; padding:15px; box-shadow:0 2px 5px rgba(0,0,0,0.1); transition: transform 0.3s ease, box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+    <a href="{% url 'tienda:detalle_producto' producto.id %}" style="text-decoration: none; color: inherit; flex: 1; display: flex; flex-direction: column;">
       {% if producto.imagen %}
         <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" style="width:100%; height:180px; object-fit:cover; border-radius:10px; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform=''">
       {% else %}
         <img src="{% static 'img/no-image.png' %}" alt="Sin imagen" style="width:100%; height:180px; object-fit:cover; border-radius:10px;">
       {% endif %}
       <h3 style="margin-top:10px;">{{ producto.nombre }}</h3>
-      <p style="color:#666; font-size:0.9rem; margin:8px 0; height:60px; overflow-y:auto; text-align:left; padding:0 5px;">
+      <p style="color:#666; font-size:0.9rem; margin:8px 0; flex: 1; overflow-y:auto; text-align:left; padding:0 5px;">
         {{ producto.descripcion|default:"Sin descripción"|truncatechars:120 }}
       </p>
-      <p style="font-weight:bold; color:#28a745;">${{ producto.precio }}</p>
+      <p style="font-weight:bold; color:#28a745; margin-bottom:0;">
+        ${{ producto.precio }}
+      </p>
     </a>
-    <div style="display:flex; gap:8px; justify-content:center; margin-top:8px;">
+    <div style="display:flex; gap:8px; justify-content:center; margin-top:12px;">
       <button class="btn-agregar" 
               data-id="{{ producto.id }}"
               style="background:#28a745; color:white; border:none; border-radius:8px; padding:8px 15px; cursor:pointer; transition:0.3s;">

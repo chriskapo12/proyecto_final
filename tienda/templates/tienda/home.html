@@ -39,6 +39,11 @@
         justify-content: space-between; /* empuja el botón al final */
         min-height: 420px; /* altura consistente para todas las tarjetas */
         box-sizing: border-box;
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
     /* El enlace que envuelve la imagen y la información debe ocupar el espacio disponible */
@@ -48,16 +53,26 @@
         flex: 1 1 auto;
         text-decoration: none;
         color: inherit;
+        width: 100%;
     }
 
     /* Asegurar que el contenedor de la imagen no se estire */
     .producto-card > a > div:first-child {
-        flex: 0 0 auto; /* mantiene la altura fija de la imagen (ya definida inline) */
+        flex: 0 0 auto; /* mantiene la altura fija de la imagen */
     }
 
-    /* Botón de agregar: mantener margen superior pequeño y centrado */
+    /* Información del producto: ocupa el espacio restante */
+    .producto-card > a > div:last-child {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Botón de agregar: alineado al final */
     .producto-card .btn-agregar {
-        margin: 12px auto 18px auto;
+        align-self: center;
+        margin-top: auto;
+        margin-bottom: 15px;
     }
 
     /* Ajustes responsive: en pantallas pequeñas el panel se convierte en relativo y los productos usan el 100% */
@@ -92,7 +107,7 @@
             </h2>
             <div class="grid-productos" id="products-container">
                 {% for producto in ultimos_productos %}
-                <div class="producto-card" data-id="{{ producto.id }}" style="background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.3s ease, box-shadow 0.3s ease; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
+                <div class="producto-card" data-id="{{ producto.id }}">
                     <a href="{% url 'tienda:detalle_producto' producto.id %}" style="text-decoration: none; color: inherit; width: 100%;">
                         <div style="width: 100%; height: 180px; background: #e5e7eb; display: flex; align-items: center; justify-content: center;">
                             {% if producto.imagen %}
@@ -109,7 +124,7 @@
                         </div>
                     </a>
                     <button class="btn-agregar" data-id="{{ producto.id }}"
-                            style="background: #48bb78; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; font-size:1.1em; margin-bottom:15px;">
+                            style="background: #48bb78; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; font-size:1.1em;">
                         🛒
                     </button>
                 </div>
@@ -194,7 +209,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const div = document.createElement('div');
         div.className = 'producto-card';
         div.dataset.id = prod.id;
-        div.style = "background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.3s ease, box-shadow 0.3s ease; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;";
 
         const imagenUrl = prod.imagen || '{% static "img/no-image.png" %}';
 
@@ -211,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             </a>
             <button class="btn-agregar" data-id="${prod.id}"
-                    style="background: #48bb78; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; font-size:1.1em; margin-bottom:15px;">
+                    style="background: #48bb78; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; font-size:1.1em;">
                 🛒
             </button>
         `;

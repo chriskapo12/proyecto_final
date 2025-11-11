@@ -14,6 +14,7 @@ urlpatterns = [
 
   # Productos
     path('productos/', views.productos_view, name='productos'),
+  path('productos/api/', views.productos_api, name='productos_api'),
     path('productos/<int:producto_id>/', views.detalle_producto_view, name='detalle_producto'),
     path('agregar/', views.agregar_producto_view, name='agregar_producto'),
     path('eliminar/<int:producto_id>/', views.eliminar_producto_view, name='eliminar_producto'),
@@ -24,4 +25,9 @@ urlpatterns = [
     path('carrito/actualizar/', views.actualizar_cantidad, name='actualizar_cantidad'),
     path('carrito/obtener/', views.obtener_carrito_ajax, name='obtener_carrito_ajax'),
     path('pago/', views.procesar_pago, name='procesar_pago'),
+    
+    # Retornos de Mercado Pago
+    path('pago-exitoso/', views.pago_exitoso, name='pago_exitoso'),
+    path('pago-fallido/', views.pago_fallido, name='pago_fallido'),
+    path('pago-pendiente/', views.pago_pendiente, name='pago_pendiente'),
 ]

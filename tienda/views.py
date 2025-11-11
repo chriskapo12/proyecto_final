@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 import json
+import mercadopago
+from django.conf import settings
 
 from .models import Producto, Carrito, CarritoItem
 from .forms import ProductoForm
@@ -195,27 +197,121 @@ def actualizar_cantidad(request):
 def procesar_pago(request):
     carrito, _ = Carrito.objects.get_or_create(usuario=request.user)
     items = list(carrito.items.select_related('producto').all())
-    
+
     if not items:
         messages.error(request, 'Tu carrito está vacío')
         return redirect('tienda:ver_carrito')
-        
+
     total = sum(item.cantidad * item.producto.precio for item in items)
-    
+
+    # Inicializar cliente de Mercado Pago
+    sdk = mercadopago.SDK(settings.MERCADOPAGO_ACCESS_TOKEN)
+
     if request.method == 'POST':
-        # Aquí iría la lógica de procesamiento del pago real
-        # Por ahora solo simularemos que el pago fue exitoso
-        
-        # Limpiamos el carrito
-        carrito.items.all().delete()
-        
-        messages.success(request, '¡chriskapo te agradece por tu compra!')
-        return redirect('tienda:productos')
-    
+        print("[DEBUG] POST recibido - método: procesar_pago")
+
+        # Obtener datos del formulario
+        nombre = request.POST.get('nombre', '').strip()
+        email = request.POST.get('email', request.user.email)
+        metodo_pago = request.POST.get('metodo_pago', 'mercadopago')
+
+        print(f"[DEBUG] Datos recibidos: nombre={nombre}, email={email}, metodo={metodo_pago}")
+
+        # Validar que el nombre no esté vacío
+        if not nombre:
+            nombre = request.user.get_full_name() or request.user.username or 'Cliente'
+
+        print(f"[DEBUG] Nombre validado: {nombre}")
+
+        if metodo_pago == 'mercadopago':
+            print("[DEBUG] Procesando pago con Mercado Pago...")
+
+            # Crear preferencia de pago para Mercado Pago
+            preference_data = {
+                "items": [
+                    {
+                        "title": item.producto.nombre,
+                        "quantity": item.cantidad,
+                        "unit_price": float(item.producto.precio),
+                    }
+                    for item in items
+                ],
+                "payer": {
+                    "name": nombre,
+                    "email": email,
+                },
+                "back_urls": {
+                    "success": settings.MERCADOPAGO_SUCCESS_URL,
+                    "failure": settings.MERCADOPAGO_FAILURE_URL,
+                    "pending": settings.MERCADOPAGO_PENDING_URL,
+                },
+                # "auto_return": "approved",  # removed to avoid invalid_auto_return when back_urls isn't accepted
+                "external_reference": f"pedido_{request.user.id}_{carrito.id}",
+            }
+
+            print(f"[DEBUG] Preferencia data: {preference_data}")
+
+            try:
+                preference_response = sdk.preference().create(preference_data)
+                print(f"[DEBUG] Response status: {preference_response.get('status')}")
+                print(f"[DEBUG] Response keys: {list(preference_response.keys())}")
+
+                if preference_response.get("status") == 201:
+                    init_point = preference_response["response"].get("init_point")
+                    print(f"[DEBUG] init_point: {init_point}")
+                    # Redirigir a Mercado Pago
+                    return redirect(init_point)
+                else:
+                    # Volcar response completo para diagnosticar error 400
+                    print(f"[DEBUG] Error: Status no es 201, es {preference_response.get('status')}")
+                    try:
+                        print(f"[DEBUG] preference_response content: {preference_response.get('response')}")
+                    except Exception:
+                        print(repr(preference_response))
+                    messages.error(request, 'Error al crear la preferencia de pago. Intenta nuevamente.')
+                    return redirect('tienda:ver_carrito')
+            except Exception as e:
+                print(f"[DEBUG] EXCEPCIÓN: {type(e).__name__}: {str(e)}")
+                import traceback
+                traceback.print_exc()
+                messages.error(request, f'Error al conectar con Mercado Pago: {str(e)}')
+                return redirect('tienda:ver_carrito')
+
+        else:
+            print("[DEBUG] Procesando pago con tarjeta local...")
+            # Método de pago simulado (tarjeta de crédito local)
+            # Limpiamos el carrito
+            carrito.items.all().delete()
+
+            messages.success(request, '¡Pago procesado exitosamente! Gracias por tu compra.')
+            return redirect('tienda:productos')
+
     return render(request, 'tienda/pago.html', {
         'items': items,
         'total': total
     })
+
+
+# ✅ Pago exitoso (Mercado Pago)
+@login_required
+def pago_exitoso(request):
+    carrito = Carrito.objects.filter(usuario=request.user).first()
+    if carrito:
+        carrito.items.all().delete()
+    
+    return render(request, 'tienda/pago_exitoso.html')
+
+
+# ❌ Pago fallido (Mercado Pago)
+@login_required
+def pago_fallido(request):
+    return render(request, 'tienda/pago_fallido.html')
+
+
+# ⏳ Pago pendiente (Mercado Pago)
+@login_required
+def pago_pendiente(request):
+    return render(request, 'tienda/pago_pendiente.html')
 
 
 # API: productos paginados (JSON)
