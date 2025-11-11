@@ -109,6 +109,15 @@
     <input type="password" name="password" placeholder="Contraseña" required>
     <button type="submit">Entrar</button>
 </form>
+    <div style="margin-top:20px; border-top:1px solid #ddd; padding-top:20px;">
+      <p style="color:#666; font-size:14px; margin-bottom:12px;">O inicia sesión con:</p>
+      <a href="/accounts/github/login/" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:10px; border-radius:8px; background:#222; color:#fff; text-decoration:none; font-weight:600; margin-bottom:8px; transition:0.3s;">
+        ⭐ GitHub
+      </a>
+      <a href="/accounts/google/login/" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:10px; border-radius:8px; background:#ea4335; color:#fff; text-decoration:none; font-weight:600; transition:0.3s;">
+        🔍 Google
+      </a>
+    </div>
     <div class="extra">
       <p>¿No tenés cuenta? <a href="{% url 'tienda:register' %}">Crear una</a></p>
     </div>

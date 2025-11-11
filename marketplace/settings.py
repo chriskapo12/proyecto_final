@@ -37,7 +37,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'tienda',  
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.github',
 ]
 
 MIDDLEWARE = [
@@ -48,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',  # middleware de allauth
 ]
 
 ROOT_URLCONF = 'marketplace.urls'
@@ -137,5 +144,41 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 TEMPLATES[0]['DIRS'] = [os.path.join(BASE_DIR, 'templates')]
 
 # Redirecciones después del login/logout
-LOGIN_REDIRECT_URL = 'home'
-LOGOUT_REDIRECT_URL = 'home'
+# Usar el nombre de URL con el namespace de la app
+LOGIN_REDIRECT_URL = 'tienda:home'
+LOGOUT_REDIRECT_URL = 'tienda:home'
+
+# Configuración mínima para django-allauth
+SITE_ID = 2
+# Backends para permitir autenticación por username/email y allauth
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
+# Opciones de cuenta
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'optional'
+ACCOUNT_SIGNUP_EMAIL_ENTER_TWICE = False  # No pedir email dos veces
+SOCIALACCOUNT_ADAPTER = 'allauth.socialaccount.adapter.DefaultSocialAccountAdapter'
+
+# Configuración por defecto para proveedores sociales
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': { 'access_type': 'online' }
+    },
+    'github': {
+        'SCOPE': ['user:email'],
+    }
+}
+
+# Configuración de allauth para auto-crear y auto-vincular cuentas sociales
+SOCIALACCOUNT_AUTO_SIGNUP = True  # Auto-crear cuenta si no existe
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'optional'  # No requerir verificación de email
+SOCIALACCOUNT_EMAIL_REQUIRED = False  # Hacer email opcional para social login
+ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter'
+
+# Redirigir al home después del login social
+SOCIALACCOUNT_LOGIN_ON_GET = True  # Permitir login directo sin confirmación extra

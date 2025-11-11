@@ -4,13 +4,13 @@
 {% block content %}
 <div style="max-width: 1000px; margin: 40px auto; padding: 20px; display: flex; gap: 40px; background: white; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
     <!-- Imagen del producto -->
-    <div style="flex: 1;">
+    <div style="flex: 1; display:flex; align-items:center; justify-content:center;">
         {% if producto.imagen %}
             <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" 
-                 style="width: 100%; height: 400px; object-fit: cover; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                 style="width: 100%; height: auto; max-height: 600px; object-fit: contain; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display:block; margin:auto;">
         {% else %}
             <img src="{% static 'img/no-image.png' %}" alt="Sin imagen" 
-                 style="width: 100%; height: 400px; object-fit: cover; border-radius: 10px;">
+                 style="width: 100%; height: auto; max-height: 600px; object-fit: contain; border-radius: 10px; display:block; margin:auto;">
         {% endif %}
     </div>
 

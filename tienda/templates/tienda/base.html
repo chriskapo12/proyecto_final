@@ -31,8 +31,7 @@
         }
 
         nav {
-            max-width: 1200px;
-            margin: auto;
+            width: 100%; /* ocupar todo el ancho para permitir que el logo quede pegado a la izquierda y los enlaces a la derecha */
             padding: 12px 20px;
             display: flex;
             justify-content: space-between;
@@ -44,12 +43,14 @@
             font-weight: 700;
             color: #16a34a;
             text-decoration: none;
+            margin-left: 0; /* asegurar que el logo quede pegado al borde izquierdo del nav */
         }
 
         .nav-links {
             display: flex;
             align-items: center;
             gap: 20px;
+            margin-right: 12px; /* separación del borde derecho */
         }
 
         .nav-links a {
@@ -122,6 +123,7 @@
         footer span { color: #22c55e; font-weight: 600; }
 
         /* 🧩 Panel lateral del carrito */
+        /* Aumentar z-index para asegurarnos que el carrito quede por encima de paneles como el filtro */
         .carrito-overlay {
             position: fixed;
             top: 0; right: 0;
@@ -130,7 +132,7 @@
             background: rgba(0,0,0,0.4);
             overflow: hidden;
             transition: width 0.4s ease;
-            z-index: 300;
+            z-index: 12000; /* mayor que .filter-panel (1100) */
         }
 
         .carrito-contenido {
@@ -146,6 +148,7 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
+            z-index: 12001; /* asegurar que el contenido del carrito esté arriba */
         }
 
         .carrito-overlay.activo { width: 100%; }

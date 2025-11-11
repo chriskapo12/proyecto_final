@@ -8,6 +8,7 @@ import json
 
 from .models import Producto, Carrito, CarritoItem
 from .forms import ProductoForm
+from django.core.paginator import Paginator, EmptyPage
 
 # 🏠 Página principal
 def home(request):
@@ -214,6 +215,47 @@ def procesar_pago(request):
     return render(request, 'tienda/pago.html', {
         'items': items,
         'total': total
+    })
+
+
+# API: productos paginados (JSON)
+def productos_api(request):
+    categoria = request.GET.get('categoria')
+    try:
+        page = int(request.GET.get('page', 1))
+    except ValueError:
+        page = 1
+    try:
+        page_size = int(request.GET.get('page_size', 8))
+    except ValueError:
+        page_size = 8
+
+    categorias = dict([('licor', 'Licor'), ('energizante', 'Energizante'), ('cerveza', 'Cerveza'), ('vino', 'Vino')])
+    productos_qs = Producto.objects.all().order_by('-id')
+    if categoria in categorias:
+        productos_qs = productos_qs.filter(categoria=categoria)
+
+    paginator = Paginator(productos_qs, page_size)
+    try:
+        page_obj = paginator.page(page)
+    except EmptyPage:
+        return JsonResponse({'products': [], 'has_next': False})
+
+    productos = []
+    for p in page_obj.object_list:
+        productos.append({
+            'id': p.id,
+            'nombre': p.nombre,
+            'descripcion': p.descripcion,
+            'precio': float(p.precio),
+            'imagen': p.imagen.url if p.imagen else None,
+            'categoria': p.get_categoria_display(),
+        })
+
+    return JsonResponse({
+        'products': productos,
+        'has_next': page_obj.has_next(),
+        'page': page,
     })
 
 # �🔄 Cargar carrito dinámico (AJAX)
