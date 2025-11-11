@@ -7,6 +7,17 @@
     <form method="POST" enctype="multipart/form-data" style="display:grid; gap:20px;">
         {% csrf_token %}
 
+        <!-- Categoría -->
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            <label for="{{ form.categoria.id_for_label }}" style="font-weight:600; color:#374151;">
+                🏷️ Categoría:
+            </label>
+            {{ form.categoria }}
+            {% if form.categoria.errors %}
+                <p style="color:#ef4444; font-size:0.875rem;">{{ form.categoria.errors.0 }}</p>
+            {% endif %}
+        </div>
+
         <!-- Nombre del producto -->
         <div style="display:flex; flex-direction:column; gap:8px;">
             <label for="{{ form.nombre.id_for_label }}" style="font-weight:600; color:#374151;">

@@ -11,9 +11,21 @@ from .forms import ProductoForm
 
 # 🏠 Página principal
 def home(request):
-    ultimos_productos = Producto.objects.all().order_by('-id')[:8]  # Obtener los últimos 8 productos
+    categoria = request.GET.get('categoria')
+    categorias = [
+        ('licor', 'Licor'),
+        ('energizante', 'Energizante'),
+        ('cerveza', 'Cerveza'),
+        ('vino', 'Vino'),
+    ]
+    productos_qs = Producto.objects.all().order_by('-id')
+    if categoria in dict(categorias):
+        productos_qs = productos_qs.filter(categoria=categoria)
+    ultimos_productos = productos_qs[:8]
     return render(request, 'tienda/home.html', {
-        'ultimos_productos': ultimos_productos
+        'ultimos_productos': ultimos_productos,
+        'categorias': categorias,
+        'categoria_seleccionada': categoria,
     })
 
 # 🧍 Registro de usuario
@@ -196,7 +208,7 @@ def procesar_pago(request):
         # Limpiamos el carrito
         carrito.items.all().delete()
         
-        messages.success(request, '¡Pago procesado exitosamente! Gracias por tu compra.')
+        messages.success(request, '¡chriskapo te agradece por tu compra!')
         return redirect('tienda:productos')
     
     return render(request, 'tienda/pago.html', {

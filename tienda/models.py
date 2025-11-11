@@ -2,11 +2,20 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class Producto(models.Model):
+
+    CATEGORIAS = [
+        ('licor', 'Licor'),
+        ('energizante', 'Energizante'),
+        ('cerveza', 'Cerveza'),
+        ('vino', 'Vino'),
+    ]
+
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)  # quién lo publicó
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
+    categoria = models.CharField(max_length=20, choices=CATEGORIAS, default='licor')
 
     def __str__(self):
         return self.nombre
