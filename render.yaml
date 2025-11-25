@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: marketplace-django
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn marketplace.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: DEBUG
+        value: False
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: marketplace-db
+          property: connectionString
+    
+databases:
+  - name: marketplace-db
+    databaseName: marketplace
+    user: marketplace

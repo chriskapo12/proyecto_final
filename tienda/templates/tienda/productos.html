@@ -3,42 +3,64 @@
 
 {% block content %}
 <style>
-    /* Modo oscuro para productos.html */
-    body.dark-mode h2 { color: #ffffff; }
-    body.dark-mode div[style*="color:#666"] { color: #d1d5db !important; }
-    body.dark-mode h3 { color: #ffffff; }
-    body.dark-mode p[style*="text-align:center"] { color: #ffffff; }
-    body.dark-mode div[style*="border:1px solid #ddd"] { 
-        background: #0f1724;
-        border-color: #2d3e52 !important;
-    }
-    body.dark-mode div[style*="border:1px solid #ddd"] a { color: #ffffff; }
+  /* Modo oscuro para productos.html */
+  body.dark-mode h2 {
+    color: #ffffff;
+  }
+
+  body.dark-mode div[style*="color:#666"] {
+    color: #d1d5db !important;
+  }
+
+  body.dark-mode h3 {
+    color: #ffffff;
+  }
+
+  body.dark-mode p[style*="text-align:center"] {
+    color: #ffffff;
+  }
+
+  body.dark-mode div[style*="border:1px solid #ddd"] {
+    background: #0f1724;
+    border-color: #2d3e52 !important;
+  }
+
+  body.dark-mode div[style*="border:1px solid #ddd"] a {
+    color: #ffffff;
+  }
 </style>
 
 <div style="display:flex; justify-content:space-between; align-items:center; margin:20px 0;">
-    <div>
-        <h2 style="margin:0;">🛍️ Productos disponibles</h2>
-        {% if buscar %}
-            <p style="color:#666; font-size:0.95rem; margin-top:8px;">Resultados para: <strong>{{ buscar }}</strong></p>
-        {% endif %}
-    </div>
-    {% if user.is_authenticated %}
-    <a href="{% url 'tienda:agregar_producto' %}" 
-       style="background:#16a34a; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:600; display:inline-flex; align-items:center; gap:8px; transition:all 0.3s ease;">
-        <span style="font-size:1.2em;">➕</span>
-        Agregar producto
-    </a>
+  <div>
+    <h2 style="margin:0;">🛍️ Productos disponibles</h2>
+    {% if buscar %}
+    <p style="color:#666; font-size:0.95rem; margin-top:8px;">Resultados para: <strong>{{ buscar }}</strong></p>
     {% endif %}
+  </div>
+  {% if user.is_authenticated %}
+  <a href="{% url 'tienda:agregar_producto' %}"
+    style="background:#16a34a; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:600; display:inline-flex; align-items:center; gap:8px; transition:all 0.3s ease;">
+    <span style="font-size:1.2em;">➕</span>
+    Agregar producto
+  </a>
+  {% endif %}
 </div>
 
 <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:20px; margin-top:20px;">
   {% for producto in productos %}
-  <div style="border:1px solid #ddd; border-radius:10px; width:220px; display:flex; flex-direction:column; padding:15px; box-shadow:0 2px 5px rgba(0,0,0,0.1); transition: transform 0.3s ease, box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
-    <a href="{% url 'tienda:detalle_producto' producto.id %}" style="text-decoration: none; color: inherit; flex: 1; display: flex; flex-direction: column;">
+  <div
+    style="border:1px solid #ddd; border-radius:10px; width:220px; display:flex; flex-direction:column; padding:15px; box-shadow:0 2px 5px rgba(0,0,0,0.1); transition: transform 0.3s ease, box-shadow 0.3s ease;"
+    onmouseover="this.style.transform='translateY(-5px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.15)'"
+    onmouseout="this.style.transform='';this.style.boxShadow=''">
+    <a href="{% url 'tienda:detalle_producto' producto.id %}"
+      style="text-decoration: none; color: inherit; flex: 1; display: flex; flex-direction: column;">
       {% if producto.imagen %}
-        <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" style="width:100%; height:180px; object-fit:cover; border-radius:10px; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform=''">
+      <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}"
+        style="width:100%; height:180px; object-fit:cover; border-radius:10px; transition: transform 0.3s ease;"
+        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform=''">
       {% else %}
-        <img src="{% static 'img/no-image.png' %}" alt="Sin imagen" style="width:100%; height:180px; object-fit:cover; border-radius:10px;">
+      <img src="{% static 'img/no-image.png' %}" alt="Sin imagen"
+        style="width:100%; height:180px; object-fit:cover; border-radius:10px;">
       {% endif %}
       <h3 style="margin-top:10px;">{{ producto.nombre }}</h3>
       <p style="color:#666; font-size:0.9rem; margin:8px 0; flex: 1; overflow-y:auto; text-align:left; padding:0 5px;">
@@ -48,27 +70,28 @@
         ${{ producto.precio }}
       </p>
     </a>
-    <div style="display:flex; gap:8px; justify-content:center; margin-top:12px; align-items:stretch;">
-      <button class="btn-agregar" 
-              data-id="{{ producto.id }}"
-              style="background:#28a745; color:white; border:none; border-radius:8px; padding:0 15px; cursor:pointer; transition:0.3s; flex:1; display:flex; align-items:center; justify-content:center; height:36px; white-space:nowrap; line-height:1;">
-        🛒 Agregar al carrito
+    <div
+      style="display:flex; gap:6px; justify-content:space-between; margin-top:12px; width:100%; box-sizing:border-box;">
+      <button class="btn-agregar" data-id="{{ producto.id }}"
+        style="background:#28a745; color:white; border:none; border-radius:8px; padding:8px 6px; cursor:pointer; transition:0.3s; flex:1; display:flex; align-items:center; justify-content:center; height:36px; font-size:0.8rem; min-width:0; max-width:50%;">
+        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">🛒 Agregar</span>
       </button>
 
       {% if user.is_authenticated and user != producto.usuario %}
-        <button class="btn-chat-vendedor" 
-                data-vendedor-id="{{ producto.usuario.id }}"
-                data-vendedor-nombre="{{ producto.usuario.username }}"
-                style="background:#3182ce; color:white; border:none; border-radius:8px; padding:0 12px; cursor:pointer; transition:0.3s; flex:1; display:flex; align-items:center; justify-content:center; height:36px; white-space:nowrap; line-height:1;">
-          💬 Vendedor
-        </button>
+      <button class="btn-chat-vendedor" data-vendedor-id="{{ producto.usuario.id }}"
+        data-vendedor-nombre="{{ producto.usuario.username }}"
+        style="background:#3182ce; color:white; border:none; border-radius:8px; padding:8px 6px; cursor:pointer; transition:0.3s; flex:1; display:flex; align-items:center; justify-content:center; height:36px; font-size:0.8rem; min-width:0; max-width:50%;">
+        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">💬 Vendedor</span>
+      </button>
       {% elif user.is_authenticated and producto.usuario == user %}
-        <form method="post" action="{% url 'tienda:eliminar_producto' producto.id %}" style="display:inline; flex:1;">
-          {% csrf_token %}
-          <button type="submit" style="background:#ef4444; color:white; border:none; border-radius:8px; padding:0 12px; cursor:pointer; width:100%; height:36px; display:flex; align-items:center; justify-content:center; white-space:nowrap; line-height:1;">
-            🗑 Eliminar
-          </button>
-        </form>
+      <form method="post" action="{% url 'tienda:eliminar_producto' producto.id %}"
+        style="display:flex; flex:1; min-width:0; max-width:50%;">
+        {% csrf_token %}
+        <button type="submit"
+          style="background:#ef4444; color:white; border:none; border-radius:8px; padding:8px 6px; cursor:pointer; width:100%; height:36px; display:flex; align-items:center; justify-content:center; font-size:0.8rem;">
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">🗑 Eliminar</span>
+        </button>
+      </form>
       {% endif %}
     </div>
   </div>
@@ -78,57 +101,57 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const botones = document.querySelectorAll(".btn-agregar");
+  document.addEventListener("DOMContentLoaded", () => {
+    const botones = document.querySelectorAll(".btn-agregar");
 
-  botones.forEach(boton => {
-    boton.addEventListener("click", () => {
-      const productoId = boton.dataset.id;
+    botones.forEach(boton => {
+      boton.addEventListener("click", () => {
+        const productoId = boton.dataset.id;
 
-      // Petición AJAX
-      fetch(`/carrito/agregar/${productoId}/`, {
-        method: "GET",
-        headers: { "X-Requested-With": "XMLHttpRequest" }
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          // Actualiza el contador de carrito en el header
-          const contador = document.getElementById("contador-carrito");
-          if (contador) contador.textContent = data.total_items;
+        // Petición AJAX
+        fetch(`/carrito/agregar/${productoId}/`, {
+          method: "GET",
+          headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              // Actualiza el contador de carrito en el header
+              const contador = document.getElementById("contador-carrito");
+              if (contador) contador.textContent = data.total_items;
 
-          // Animación o aviso visual
-          boton.textContent = "✅ Agregado";
-          boton.style.background = "#007bff";
+              // Animación o aviso visual
+              boton.innerHTML = '<span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">✅ Agregado</span>';
+              boton.style.background = "#007bff";
+              setTimeout(() => {
+                boton.innerHTML = '<span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">🛒 Agregar</span>';
+                boton.style.background = "#28a745";
+              }, 1200);
+            } else {
+              alert("No se pudo agregar al carrito 😢");
+            }
+          })
+          .catch(err => console.error("Error al agregar al carrito:", err));
+      });
+    });
+
+    // Botones de chat con vendedor
+    const btnChats = document.querySelectorAll(".btn-chat-vendedor");
+    btnChats.forEach(btnChat => {
+      btnChat.addEventListener("click", (e) => {
+        e.preventDefault();
+        const vendedorId = btnChat.dataset.vendedorId;
+        const vendedorNombre = btnChat.dataset.vendedorNombre;
+
+        const chatBtn = document.getElementById('abrir-chat');
+        if (chatBtn) {
+          chatBtn.click();
           setTimeout(() => {
-            boton.textContent = "🛒 Agregar al carrito";
-            boton.style.background = "#28a745";
-          }, 1200);
-        } else {
-          alert("No se pudo agregar al carrito 😢");
+            window.abrirConversacion(parseInt(vendedorId), vendedorNombre);
+          }, 500);
         }
-      })
-      .catch(err => console.error("Error al agregar al carrito:", err));
+      });
     });
   });
-
-  // Botones de chat con vendedor
-  const btnChats = document.querySelectorAll(".btn-chat-vendedor");
-  btnChats.forEach(btnChat => {
-    btnChat.addEventListener("click", (e) => {
-      e.preventDefault();
-      const vendedorId = btnChat.dataset.vendedorId;
-      const vendedorNombre = btnChat.dataset.vendedorNombre;
-      
-      const chatBtn = document.getElementById('abrir-chat');
-      if (chatBtn) {
-        chatBtn.click();
-        setTimeout(() => {
-          window.abrirConversacion(parseInt(vendedorId), vendedorNombre);
-        }, 500);
-      }
-    });
-  });
-});
 </script>
 {% endblock %}

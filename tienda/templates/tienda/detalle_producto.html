@@ -27,32 +27,33 @@
         .buttons-container {
             flex-direction: column !important;
         }
+
         .buttons-container button,
         .buttons-container a {
             flex: unset !important;
             width: 100% !important;
-            min-width: unset !important;
         }
     }
 </style>
 
 {% block content %}
-<div class="producto-detalle" style="max-width: 1000px; margin: 40px auto; padding: 20px; display: flex; gap: 40px; background: white; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+<div class="producto-detalle"
+    style="max-width: 1000px; margin: 40px auto; padding: 20px; display: flex; gap: 40px; background: white; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
     <!-- Imagen del producto -->
     <div style="flex: 1; display:flex; align-items:center; justify-content:center;">
         {% if producto.imagen %}
-            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" 
-                 style="width: 100%; height: auto; max-height: 600px; object-fit: contain; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display:block; margin:auto;">
+        <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}"
+            style="width: 100%; height: auto; max-height: 600px; object-fit: contain; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display:block; margin:auto;">
         {% else %}
-            <img src="{% static 'img/no-image.png' %}" alt="Sin imagen" 
-                 style="width: 100%; height: auto; max-height: 600px; object-fit: contain; border-radius: 10px; display:block; margin:auto;">
+        <img src="{% static 'img/no-image.png' %}" alt="Sin imagen"
+            style="width: 100%; height: auto; max-height: 600px; object-fit: contain; border-radius: 10px; display:block; margin:auto;">
         {% endif %}
     </div>
 
     <!-- Información del producto -->
     <div style="flex: 1; display: flex; flex-direction: column;">
         <h1 style="margin: 0 0 15px 0; color: #2d3748; font-size: 2.5em;">{{ producto.nombre }}</h1>
-        
+
         <div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
             <p style="font-size: 2em; color: #2f855a; margin: 0;">${{ producto.precio }}</p>
         </div>
@@ -64,53 +65,51 @@
             </p>
         </div>
 
-        <div style="margin-top: auto; display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch;" class="buttons-container">
+        <div style="margin-top: auto; display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch;"
+            class="buttons-container">
             <!-- Botón de agregar al carrito -->
-            <button class="btn-agregar" 
-                    data-id="{{ producto.id }}"
-                    style="flex: 1; min-width: 150px; background: #2f855a; color: white; border: none; 
-                           padding: 0 30px; border-radius: 10px; font-size: 1.2em; 
+            <button class="btn-agregar" data-id="{{ producto.id }}"
+                style="flex: 1 1 calc(50% - 5px); max-width: calc(50% - 5px); background: #2f855a; color: white; border: none; 
+                           padding: 12px 20px; border-radius: 10px; font-size: 1.05em; 
                            cursor: pointer; transition: all 0.3s ease; display: flex; 
-                           align-items: center; justify-content: center; gap: 10px; height: 54px; white-space: nowrap; line-height: 1;">
-                <span style="font-size: 1.4em;">🛒</span> 
+                           align-items: center; justify-content: center; gap: 8px; height: 54px; white-space: nowrap; line-height: 1;">
+                <span style="font-size: 1.3em;">🛒</span>
                 <span>Agregar al carrito</span>
             </button>
 
             {% if user.is_authenticated and user != producto.usuario %}
             <!-- Botón para chatear con el vendedor -->
-            <button class="btn-chat-vendedor" 
-                    data-vendedor-id="{{ producto.usuario.id }}"
-                    data-vendedor-nombre="{{ producto.usuario.username }}"
-                    style="flex: 1; min-width: 150px; background: #3182ce; color: white; border: none; 
-                           padding: 0 30px; border-radius: 10px; font-size: 1.2em; 
+            <button class="btn-chat-vendedor" data-vendedor-id="{{ producto.usuario.id }}"
+                data-vendedor-nombre="{{ producto.usuario.username }}"
+                style="flex: 1 1 calc(50% - 5px); max-width: calc(50% - 5px); background: #3182ce; color: white; border: none; 
+                           padding: 12px 20px; border-radius: 10px; font-size: 1.05em; 
                            cursor: pointer; transition: all 0.3s ease; display: flex; 
-                           align-items: center; justify-content: center; gap: 10px; height: 54px; white-space: nowrap; line-height: 1;">
-                <span style="font-size: 1.4em;">💬</span> 
-                <span>Chatear con el vendedor</span>
+                           align-items: center; justify-content: center; gap: 8px; height: 54px; white-space: nowrap; line-height: 1;">
+                <span style="font-size: 1.3em;">💬</span>
+                <span>Chatear con vendedor</span>
             </button>
             {% elif not user.is_authenticated %}
             <!-- Botón de login para chatear -->
-            <a href="{% url 'tienda:login' %}" 
-               style="flex: 1; min-width: 150px; background: #3182ce; color: white; border: none; 
-                      padding: 0 30px; border-radius: 10px; font-size: 1.2em; 
+            <a href="{% url 'tienda:login' %}" style="flex: 1 1 calc(50% - 5px); max-width: calc(50% - 5px); background: #3182ce; color: white; border: none; 
+                      padding: 12px 20px; border-radius: 10px; font-size: 1.05em; 
                       cursor: pointer; transition: all 0.3s ease; display: flex; 
-                      align-items: center; justify-content: center; gap: 10px;
+                      align-items: center; justify-content: center; gap: 8px;
                       text-decoration: none; height: 54px; white-space: nowrap; line-height: 1;">
-                <span style="font-size: 1.4em;">💬</span> 
+                <span style="font-size: 1.3em;">💬</span>
                 <span>Inicia sesión para chatear</span>
             </a>
             {% endif %}
 
             {% if user.is_authenticated and producto.usuario == user %}
-            <form method="post" action="{% url 'tienda:eliminar_producto' producto.id %}" 
-                  style="flex: 1; min-width: 150px;">
+            <form method="post" action="{% url 'tienda:eliminar_producto' producto.id %}"
+                style="flex: 1 1 100%; width: 100%;">
                 {% csrf_token %}
-                <button type="submit" 
-                        style="width: 100%; background: #e53e3e; color: white; border: none; 
-                               padding: 0 30px; border-radius: 10px; font-size: 1.2em; 
+                <button type="submit"
+                    style="width: 100%; background: #e53e3e; color: white; border: none; 
+                               padding: 12px 30px; border-radius: 10px; font-size: 1.05em; 
                                cursor: pointer; transition: all 0.3s ease; display: flex; 
                                align-items: center; justify-content: center; gap: 10px; height: 54px; white-space: nowrap; line-height: 1;">
-                    <span style="font-size: 1.4em;">🗑</span> 
+                    <span style="font-size: 1.3em;">🗑</span>
                     <span>Eliminar producto</span>
                 </button>
             </form>
@@ -120,56 +119,58 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-    // Botón de agregar al carrito
-    const boton = document.querySelector(".btn-agregar");
-    
-    boton.addEventListener("click", () => {
-        const productoId = boton.dataset.id;
+    document.addEventListener("DOMContentLoaded", () => {
+        // Botón de agregar al carrito
+        const boton = document.querySelector(".btn-agregar");
 
-        fetch(`/carrito/agregar/${productoId}/`, {
-            method: "GET",
-            headers: { "X-Requested-With": "XMLHttpRequest" }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                const contador = document.getElementById("contador-carrito");
-                if (contador) contador.textContent = data.total_items;
+        if (boton) {
+            boton.addEventListener("click", () => {
+                const productoId = boton.dataset.id;
 
-                boton.innerHTML = '<span style="font-size: 1.4em;">✅</span> ¡Agregado al carrito!';
-                boton.style.background = "#2b6cb0";
-                
-                setTimeout(() => {
-                    boton.innerHTML = '<span style="font-size: 1.4em;">🛒</span> Agregar al carrito';
-                    boton.style.background = "#2f855a";
-                }, 1500);
-            } else {
-                alert("No se pudo agregar al carrito");
-            }
-        })
-        .catch(err => console.error("Error:", err));
+                fetch(`/carrito/agregar/${productoId}/`, {
+                    method: "GET",
+                    headers: { "X-Requested-With": "XMLHttpRequest" }
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            const contador = document.getElementById("contador-carrito");
+                            if (contador) contador.textContent = data.total_items;
+
+                            boton.innerHTML = '<span style="font-size: 1.3em;">✅</span> ¡Agregado al carrito!';
+                            boton.style.background = "#2b6cb0";
+
+                            setTimeout(() => {
+                                boton.innerHTML = '<span style="font-size: 1.3em;">🛒</span> <span>Agregar al carrito</span>';
+                                boton.style.background = "#2f855a";
+                            }, 1500);
+                        } else {
+                            alert("No se pudo agregar al carrito");
+                        }
+                    })
+                    .catch(err => console.error("Error:", err));
+            });
+        }
+
+        // Botón de chat con vendedor
+        const btnChat = document.querySelector(".btn-chat-vendedor");
+        if (btnChat) {
+            btnChat.addEventListener("click", () => {
+                const vendedorId = btnChat.dataset.vendedorId;
+                const vendedorNombre = btnChat.dataset.vendedorNombre;
+
+                // Abre el chat panel desde base.html
+                const chatBtn = document.getElementById('abrir-chat');
+                if (chatBtn) {
+                    chatBtn.click();
+
+                    // Espera a que el panel se abra y luego abre la conversación
+                    setTimeout(() => {
+                        abrirConversacion(vendedorId, vendedorNombre);
+                    }, 500);
+                }
+            });
+        }
     });
-
-    // Botón de chat con vendedor
-    const btnChat = document.querySelector(".btn-chat-vendedor");
-    if (btnChat) {
-        btnChat.addEventListener("click", () => {
-            const vendedorId = btnChat.dataset.vendedorId;
-            const vendedorNombre = btnChat.dataset.vendedorNombre;
-            
-            // Abre el chat panel desde base.html
-            const chatBtn = document.getElementById('abrir-chat');
-            if (chatBtn) {
-                chatBtn.click();
-                
-                // Espera a que el panel se abra y luego abre la conversación
-                setTimeout(() => {
-                    abrirConversacion(vendedorId, vendedorNombre);
-                }, 500);
-            }
-        });
-    }
-});
 </script>
 {% endblock %}

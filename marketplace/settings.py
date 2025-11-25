@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-m#!_fgkm5k8h8q8k+mj9^ss(s9wqa!18$6wn#egtsp+rrn)!r@'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-m#!_fgkm5k8h8q8k+mj9^ss(s9wqa!18$6wn#egtsp+rrn)!r@')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 
 # Application definition
@@ -48,13 +50,14 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware',  # middleware de allauth
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'marketplace.urls'
@@ -62,7 +65,7 @@ ROOT_URLCONF = 'marketplace.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -81,10 +84,11 @@ WSGI_APPLICATION = 'marketplace.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 
@@ -122,29 +126,30 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-import os
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# Archivos estáticos (CSS, JS, imágenes)
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')] if os.path.exists(os.path.join(BASE_DIR, 'static')) else []
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# WhiteNoise configuration
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Archivos subidos por usuarios (imágenes de productos, etc.)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Templates
-TEMPLATES[0]['DIRS'] = [os.path.join(BASE_DIR, 'templates')]
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Redirecciones después del login/logout
-# Usar el nombre de URL con el namespace de la app
 LOGIN_REDIRECT_URL = 'tienda:home'
 LOGOUT_REDIRECT_URL = 'tienda:home'
 
@@ -160,7 +165,7 @@ AUTHENTICATION_BACKENDS = (
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = 'optional'
-ACCOUNT_SIGNUP_EMAIL_ENTER_TWICE = False  # No pedir email dos veces
+ACCOUNT_SIGNUP_EMAIL_ENTER_TWICE = False
 SOCIALACCOUNT_ADAPTER = 'marketplace.social_adapter.MySocialAccountAdapter'
 
 # Configuración por defecto para proveedores sociales
@@ -175,20 +180,18 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 # Configuración de allauth para auto-crear y auto-vincular cuentas sociales
-SOCIALACCOUNT_AUTO_SIGNUP = True  # Auto-crear cuenta si no existe
-SOCIALACCOUNT_EMAIL_VERIFICATION = 'optional'  # No requerir verificación de email
-SOCIALACCOUNT_EMAIL_REQUIRED = False  # Hacer email opcional para social login
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'optional'
+SOCIALACCOUNT_EMAIL_REQUIRED = False
 ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter'
 
 # Redirigir al home después del login social
-SOCIALACCOUNT_LOGIN_ON_GET = True  # Permitir login directo sin confirmación extra
+SOCIALACCOUNT_LOGIN_ON_GET = True
 
 # ==================== CONFIGURACIÓN DE MERCADO PAGO ====================
-# Access Token de Mercado Pago (obtén uno desde tu panel de desarrollador)
-# Para desarrollo usa: https://developer.mercadopago.com/panel
-MERCADOPAGO_ACCESS_TOKEN = 'APP_USR-6648621459860687-111112-6525bfe39eb274aa4986f608cece6d9a-2981232220'  # Reemplaza con tu token real
+MERCADOPAGO_ACCESS_TOKEN = 'APP_USR-6648621459860687-111112-6525bfe39eb274aa4986f608cece6d9a-2981232220'
 
-# URL de retorno después del pago (actualiza según tu dominio)
+# URL de retorno después del pago
 MERCADOPAGO_SUCCESS_URL = 'http://127.0.0.1:8000/pago-exitoso/'
 MERCADOPAGO_FAILURE_URL = 'http://127.0.0.1:8000/pago-fallido/'
 MERCADOPAGO_PENDING_URL = 'http://127.0.0.1:8000/pago-pendiente/'
