@@ -38,3 +38,19 @@ class CarritoItem(models.Model):
 
     def __str__(self):
         return f"{self.producto.nombre} x{self.cantidad}"
+
+
+class Mensaje(models.Model):
+    """Modelo para mensajes de chat en tiempo real entre usuarios"""
+    remitente = models.ForeignKey(User, on_delete=models.CASCADE, related_name='mensajes_enviados')
+    destinatario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='mensajes_recibidos')
+    contenido = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    leido = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['timestamp']
+
+    def __str__(self):
+        return f"{self.remitente.username} → {self.destinatario.username}: {self.contenido[:50]}"
+

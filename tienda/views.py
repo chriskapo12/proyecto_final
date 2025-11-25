@@ -74,7 +74,21 @@ def logout_view(request):
 # 🛍 Lista de productos
 def productos_view(request):
     productos = Producto.objects.all().order_by('-id')  # Ordenamos por más recientes primero
-    return render(request, 'tienda/productos.html', {'productos': productos})
+    
+    # Búsqueda por nombre o descripción
+    buscar = request.GET.get('buscar', '').strip()
+    if buscar:
+        from django.db.models import Q
+        productos = productos.filter(
+            Q(nombre__icontains=buscar) | 
+            Q(descripcion__icontains=buscar) |
+            Q(categoria__icontains=buscar)
+        )
+    
+    return render(request, 'tienda/productos.html', {
+        'productos': productos,
+        'buscar': buscar,
+    })
 
 # 🔍 Detalle de producto
 def detalle_producto_view(request, producto_id):
@@ -346,6 +360,8 @@ def productos_api(request):
             'precio': float(p.precio),
             'imagen': p.imagen.url if p.imagen else None,
             'categoria': p.get_categoria_display(),
+            'usuario_id': p.usuario.id,
+            'usuario_nombre': p.usuario.username,
         })
 
     return JsonResponse({
@@ -379,3 +395,127 @@ def obtener_carrito_ajax(request):
         'total': float(total),
         'total_items': carrito.total_items(),
     })
+
+
+# 💬 Chat en tiempo real
+@login_required
+def obtener_conversaciones(request):
+    """Obtiene lista de usuarios con conversaciones"""
+    from django.db.models import Q
+    from .models import Mensaje
+    
+    # Usuarios con los que el usuario actual ha chateado
+    usuarios = User.objects.filter(
+        Q(mensajes_enviados__destinatario=request.user) |
+        Q(mensajes_recibidos__remitente=request.user)
+    ).distinct().exclude(id=request.user.id)
+    
+    conversaciones = []
+    for usuario in usuarios:
+        ultimo_mensaje = Mensaje.objects.filter(
+            Q(remitente=request.user, destinatario=usuario) |
+            Q(remitente=usuario, destinatario=request.user)
+        ).last()
+        
+        no_leidos = Mensaje.objects.filter(
+            remitente=usuario,
+            destinatario=request.user,
+            leido=False
+        ).count()
+        
+        conversaciones.append({
+            'id': usuario.id,
+            'username': usuario.username,
+            'ultimo_mensaje': ultimo_mensaje.contenido[:50] if ultimo_mensaje else '',
+            'timestamp': ultimo_mensaje.timestamp.isoformat() if ultimo_mensaje else None,
+            'no_leidos': no_leidos,
+        })
+    
+    return JsonResponse({'conversaciones': conversaciones})
+
+
+@login_required
+def obtener_mensajes(request, usuario_id):
+    """Obtiene mensajes de una conversación específica"""
+    from .models import Mensaje
+    from django.db.models import Q
+    
+    try:
+        otro_usuario = User.objects.get(id=usuario_id)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
+    
+    mensajes = Mensaje.objects.filter(
+        Q(remitente=request.user, destinatario=otro_usuario) |
+        Q(remitente=otro_usuario, destinatario=request.user)
+    ).select_related('remitente')
+    
+    # Marcar como leídos los mensajes del otro usuario
+    Mensaje.objects.filter(
+        remitente=otro_usuario,
+        destinatario=request.user,
+        leido=False
+    ).update(leido=True)
+    
+    mensajes_list = []
+    for msg in mensajes:
+        mensajes_list.append({
+            'id': msg.id,
+            'remitente': msg.remitente.username,
+            'remitente_id': msg.remitente.id,
+            'contenido': msg.contenido,
+            'timestamp': msg.timestamp.isoformat(),
+            'es_mio': msg.remitente.id == request.user.id,
+        })
+    
+    return JsonResponse({
+        'otro_usuario': {
+            'id': otro_usuario.id,
+            'username': otro_usuario.username,
+        },
+        'mensajes': mensajes_list,
+    })
+
+
+@login_required
+def enviar_mensaje(request):
+    """Envía un mensaje a otro usuario"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    from .models import Mensaje
+    
+    data = json.loads(request.body)
+    destinatario_id = data.get('destinatario_id')
+    contenido = data.get('contenido', '').strip()
+    
+    if not contenido:
+        return JsonResponse({'error': 'Mensaje vacío'}, status=400)
+    
+    try:
+        destinatario = User.objects.get(id=destinatario_id)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
+    
+    mensaje = Mensaje.objects.create(
+        remitente=request.user,
+        destinatario=destinatario,
+        contenido=contenido
+    )
+    
+    return JsonResponse({
+        'success': True,
+        'mensaje': {
+            'id': mensaje.id,
+            'remitente': mensaje.remitente.username,
+            'contenido': mensaje.contenido,
+            'timestamp': mensaje.timestamp.isoformat(),
+        }
+    })
+
+
+@login_required
+def obtener_usuarios_disponibles(request):
+    """Obtiene lista de todos los usuarios (excepto el actual) para iniciar chat"""
+    usuarios = User.objects.exclude(id=request.user.id).values('id', 'username')
+    return JsonResponse({'usuarios': list(usuarios)})

@@ -1,8 +1,43 @@
 {% extends 'tienda/base.html' %}
 {% load static %}
 
+<style>
+    /* Dark mode para detalle del producto */
+    body.dark-mode .producto-detalle {
+        background: #0f1724 !important;
+        color: #ffffff !important;
+    }
+
+    body.dark-mode .producto-detalle h1,
+    body.dark-mode .producto-detalle h3 {
+        color: #ffffff !important;
+    }
+
+    body.dark-mode .producto-detalle p {
+        color: #e5e7eb !important;
+    }
+
+    body.dark-mode .btn-chat-vendedor:hover,
+    body.dark-mode .btn-agregar:hover {
+        opacity: 0.9;
+    }
+
+    /* Responsive: botones en línea */
+    @media (max-width: 768px) {
+        .buttons-container {
+            flex-direction: column !important;
+        }
+        .buttons-container button,
+        .buttons-container a {
+            flex: unset !important;
+            width: 100% !important;
+            min-width: unset !important;
+        }
+    }
+</style>
+
 {% block content %}
-<div style="max-width: 1000px; margin: 40px auto; padding: 20px; display: flex; gap: 40px; background: white; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+<div class="producto-detalle" style="max-width: 1000px; margin: 40px auto; padding: 20px; display: flex; gap: 40px; background: white; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
     <!-- Imagen del producto -->
     <div style="flex: 1; display:flex; align-items:center; justify-content:center;">
         {% if producto.imagen %}
@@ -29,27 +64,54 @@
             </p>
         </div>
 
-        <div style="margin-top: auto;">
+        <div style="margin-top: auto; display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch;" class="buttons-container">
             <!-- Botón de agregar al carrito -->
             <button class="btn-agregar" 
                     data-id="{{ producto.id }}"
-                    style="width: 100%; background: #2f855a; color: white; border: none; 
-                           padding: 15px 30px; border-radius: 10px; font-size: 1.2em; 
+                    style="flex: 1; min-width: 150px; background: #2f855a; color: white; border: none; 
+                           padding: 0 30px; border-radius: 10px; font-size: 1.2em; 
                            cursor: pointer; transition: all 0.3s ease; display: flex; 
-                           align-items: center; justify-content: center; gap: 10px;">
+                           align-items: center; justify-content: center; gap: 10px; height: 54px; white-space: nowrap; line-height: 1;">
                 <span style="font-size: 1.4em;">🛒</span> 
-                Agregar al carrito
+                <span>Agregar al carrito</span>
             </button>
+
+            {% if user.is_authenticated and user != producto.usuario %}
+            <!-- Botón para chatear con el vendedor -->
+            <button class="btn-chat-vendedor" 
+                    data-vendedor-id="{{ producto.usuario.id }}"
+                    data-vendedor-nombre="{{ producto.usuario.username }}"
+                    style="flex: 1; min-width: 150px; background: #3182ce; color: white; border: none; 
+                           padding: 0 30px; border-radius: 10px; font-size: 1.2em; 
+                           cursor: pointer; transition: all 0.3s ease; display: flex; 
+                           align-items: center; justify-content: center; gap: 10px; height: 54px; white-space: nowrap; line-height: 1;">
+                <span style="font-size: 1.4em;">💬</span> 
+                <span>Chatear con el vendedor</span>
+            </button>
+            {% elif not user.is_authenticated %}
+            <!-- Botón de login para chatear -->
+            <a href="{% url 'tienda:login' %}" 
+               style="flex: 1; min-width: 150px; background: #3182ce; color: white; border: none; 
+                      padding: 0 30px; border-radius: 10px; font-size: 1.2em; 
+                      cursor: pointer; transition: all 0.3s ease; display: flex; 
+                      align-items: center; justify-content: center; gap: 10px;
+                      text-decoration: none; height: 54px; white-space: nowrap; line-height: 1;">
+                <span style="font-size: 1.4em;">💬</span> 
+                <span>Inicia sesión para chatear</span>
+            </a>
+            {% endif %}
 
             {% if user.is_authenticated and producto.usuario == user %}
             <form method="post" action="{% url 'tienda:eliminar_producto' producto.id %}" 
-                  style="margin-top: 15px;">
+                  style="flex: 1; min-width: 150px;">
                 {% csrf_token %}
                 <button type="submit" 
                         style="width: 100%; background: #e53e3e; color: white; border: none; 
-                               padding: 15px 30px; border-radius: 10px; font-size: 1.2em; 
-                               cursor: pointer; transition: all 0.3s ease;">
-                    🗑 Eliminar producto
+                               padding: 0 30px; border-radius: 10px; font-size: 1.2em; 
+                               cursor: pointer; transition: all 0.3s ease; display: flex; 
+                               align-items: center; justify-content: center; gap: 10px; height: 54px; white-space: nowrap; line-height: 1;">
+                    <span style="font-size: 1.4em;">🗑</span> 
+                    <span>Eliminar producto</span>
                 </button>
             </form>
             {% endif %}
@@ -59,6 +121,7 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+    // Botón de agregar al carrito
     const boton = document.querySelector(".btn-agregar");
     
     boton.addEventListener("click", () => {
@@ -87,6 +150,26 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(err => console.error("Error:", err));
     });
+
+    // Botón de chat con vendedor
+    const btnChat = document.querySelector(".btn-chat-vendedor");
+    if (btnChat) {
+        btnChat.addEventListener("click", () => {
+            const vendedorId = btnChat.dataset.vendedorId;
+            const vendedorNombre = btnChat.dataset.vendedorNombre;
+            
+            // Abre el chat panel desde base.html
+            const chatBtn = document.getElementById('abrir-chat');
+            if (chatBtn) {
+                chatBtn.click();
+                
+                // Espera a que el panel se abra y luego abre la conversación
+                setTimeout(() => {
+                    abrirConversacion(vendedorId, vendedorNombre);
+                }, 500);
+            }
+        });
+    }
 });
 </script>
 {% endblock %}

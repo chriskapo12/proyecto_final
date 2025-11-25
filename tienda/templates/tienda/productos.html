@@ -2,8 +2,26 @@
 {% load static %}
 
 {% block content %}
+<style>
+    /* Modo oscuro para productos.html */
+    body.dark-mode h2 { color: #ffffff; }
+    body.dark-mode div[style*="color:#666"] { color: #d1d5db !important; }
+    body.dark-mode h3 { color: #ffffff; }
+    body.dark-mode p[style*="text-align:center"] { color: #ffffff; }
+    body.dark-mode div[style*="border:1px solid #ddd"] { 
+        background: #0f1724;
+        border-color: #2d3e52 !important;
+    }
+    body.dark-mode div[style*="border:1px solid #ddd"] a { color: #ffffff; }
+</style>
+
 <div style="display:flex; justify-content:space-between; align-items:center; margin:20px 0;">
-    <h2 style="margin:0;">🛍️ Productos disponibles</h2>
+    <div>
+        <h2 style="margin:0;">🛍️ Productos disponibles</h2>
+        {% if buscar %}
+            <p style="color:#666; font-size:0.95rem; margin-top:8px;">Resultados para: <strong>{{ buscar }}</strong></p>
+        {% endif %}
+    </div>
     {% if user.is_authenticated %}
     <a href="{% url 'tienda:agregar_producto' %}" 
        style="background:#16a34a; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:600; display:inline-flex; align-items:center; gap:8px; transition:all 0.3s ease;">
@@ -30,17 +48,24 @@
         ${{ producto.precio }}
       </p>
     </a>
-    <div style="display:flex; gap:8px; justify-content:center; margin-top:12px;">
+    <div style="display:flex; gap:8px; justify-content:center; margin-top:12px; align-items:stretch;">
       <button class="btn-agregar" 
               data-id="{{ producto.id }}"
-              style="background:#28a745; color:white; border:none; border-radius:8px; padding:8px 15px; cursor:pointer; transition:0.3s;">
+              style="background:#28a745; color:white; border:none; border-radius:8px; padding:0 15px; cursor:pointer; transition:0.3s; flex:1; display:flex; align-items:center; justify-content:center; height:36px; white-space:nowrap; line-height:1;">
         🛒 Agregar al carrito
       </button>
 
-      {% if user.is_authenticated and producto.usuario == user %}
-        <form method="post" action="{% url 'tienda:eliminar_producto' producto.id %}" style="display:inline;">
+      {% if user.is_authenticated and user != producto.usuario %}
+        <button class="btn-chat-vendedor" 
+                data-vendedor-id="{{ producto.usuario.id }}"
+                data-vendedor-nombre="{{ producto.usuario.username }}"
+                style="background:#3182ce; color:white; border:none; border-radius:8px; padding:0 12px; cursor:pointer; transition:0.3s; flex:1; display:flex; align-items:center; justify-content:center; height:36px; white-space:nowrap; line-height:1;">
+          💬 Vendedor
+        </button>
+      {% elif user.is_authenticated and producto.usuario == user %}
+        <form method="post" action="{% url 'tienda:eliminar_producto' producto.id %}" style="display:inline; flex:1;">
           {% csrf_token %}
-          <button type="submit" style="background:#ef4444; color:white; border:none; border-radius:8px; padding:8px 12px; cursor:pointer;">
+          <button type="submit" style="background:#ef4444; color:white; border:none; border-radius:8px; padding:0 12px; cursor:pointer; width:100%; height:36px; display:flex; align-items:center; justify-content:center; white-space:nowrap; line-height:1;">
             🗑 Eliminar
           </button>
         </form>
@@ -84,6 +109,24 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       })
       .catch(err => console.error("Error al agregar al carrito:", err));
+    });
+  });
+
+  // Botones de chat con vendedor
+  const btnChats = document.querySelectorAll(".btn-chat-vendedor");
+  btnChats.forEach(btnChat => {
+    btnChat.addEventListener("click", (e) => {
+      e.preventDefault();
+      const vendedorId = btnChat.dataset.vendedorId;
+      const vendedorNombre = btnChat.dataset.vendedorNombre;
+      
+      const chatBtn = document.getElementById('abrir-chat');
+      if (chatBtn) {
+        chatBtn.click();
+        setTimeout(() => {
+          window.abrirConversacion(parseInt(vendedorId), vendedorNombre);
+        }, 500);
+      }
     });
   });
 });

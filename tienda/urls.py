@@ -30,4 +30,10 @@ urlpatterns = [
     path('pago-exitoso/', views.pago_exitoso, name='pago_exitoso'),
     path('pago-fallido/', views.pago_fallido, name='pago_fallido'),
     path('pago-pendiente/', views.pago_pendiente, name='pago_pendiente'),
+    
+    # 💬 Chat
+    path('chat/conversaciones/', views.obtener_conversaciones, name='obtener_conversaciones'),
+    path('chat/mensajes/<int:usuario_id>/', views.obtener_mensajes, name='obtener_mensajes'),
+    path('chat/enviar/', views.enviar_mensaje, name='enviar_mensaje'),
+    path('chat/usuarios/', views.obtener_usuarios_disponibles, name='obtener_usuarios'),
 ]

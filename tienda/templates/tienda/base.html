@@ -26,20 +26,20 @@
         /* Modo oscuro: se aplica añadiendo la clase .dark-mode al body */
         body.dark-mode {
             background-color: #000000;
-            color: #e5e7eb;
+            color: #ffffff;
         }
         /* Header y navegación */
         body.dark-mode header { background: #0b1220; box-shadow: 0 2px 8px rgba(0,0,0,0.6); }
-        body.dark-mode .nav-links a { color: #e5e7eb; }
+        body.dark-mode .nav-links a { color: #ffffff; }
         body.dark-mode .logo { color: #22c55e; }
 
         /* Footer y carrito */
-        body.dark-mode footer { background: #0b1220; color: #cbd5e1; }
-        body.dark-mode .carrito-contenido { background: #0f1724; color: #e5e7eb; }
+        body.dark-mode footer { background: #0b1220; color: #ffffff; }
+        body.dark-mode .carrito-contenido { background: #0f1724; color: #ffffff; }
 
         /* Texto del carrito */
-        body.dark-mode .item-info h4 { color: #e5e7eb; }
-        body.dark-mode .item-info p { color: #cbd5e1; }
+        body.dark-mode .item-info h4 { color: #ffffff; }
+        body.dark-mode .item-info p { color: #ffffff; }
 
     /* Tarjetas de producto (home, productos) */
     /* Mantener la caja exterior ligera y separar claramente la zona de imagen y la zona de info */
@@ -47,9 +47,9 @@
     /* Zona de imagen: mantener fondo claro para que las imágenes se vean nítidas */
     body.dark-mode .producto-card a > div:first-child { background: #e5e7eb; }
     /* Zona de información: fondo oscuro y texto claro */
-    body.dark-mode .producto-card a > div:last-child { background: #071226; color: #e5e7eb; }
-    body.dark-mode .producto-card a > div:last-child .font-category, body.dark-mode .producto-card a > div:last-child .producto-nombre { color: #cbd5e1; }
-    body.dark-mode .producto-card a > div:last-child .producto-nombre { color: #e5e7eb; font-weight:700; }
+    body.dark-mode .producto-card a > div:last-child { background: #071226; color: #ffffff; }
+    body.dark-mode .producto-card a > div:last-child .font-category, body.dark-mode .producto-card a > div:last-child .producto-nombre { color: #ffffff; }
+    body.dark-mode .producto-card a > div:last-child .producto-nombre { color: #ffffff; font-weight:700; }
     body.dark-mode .producto-card .btn-agregar { background: #16a34a; color: white; box-shadow: 0 4px 10px rgba(2,6,23,0.5); }
 
     /* Panel de filtro */
@@ -58,9 +58,9 @@
     body.dark-mode select, body.dark-mode input, body.dark-mode textarea { background: #f8fafc; color: #0b1220; border: 1px solid #e6edf3; }
 
         /* Tablas y listados */
-        body.dark-mode table { color: #e5e7eb; }
+        body.dark-mode table { color: #ffffff; }
         body.dark-mode table tr { border-color: rgba(255,255,255,0.04); }
-        body.dark-mode th { background: rgba(255,255,255,0.02); color: #e5e7eb; }
+        body.dark-mode th { background: rgba(255,255,255,0.02); color: #ffffff; }
 
         /* Botones principales: mantenemos verde pero con mayor contraste */
         body.dark-mode .btn-login, body.dark-mode .btn-logout { background: linear-gradient(135deg, #2ed573, #16a34a); }
@@ -88,6 +88,69 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 20px;
+        }
+
+        /* Buscador */
+        .search-container {
+            flex: 1;
+            max-width: 500px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-family: 'Poppins', sans-serif;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #16a34a;
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+        }
+
+        .search-btn {
+            background: #16a34a;
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-btn:hover {
+            background: #15803d;
+            transform: translateY(-2px);
+        }
+
+        body.dark-mode .search-input {
+            background: #1a2332;
+            color: #ffffff;
+            border-color: #2d3e52;
+        }
+
+        body.dark-mode .search-input::placeholder {
+            color: #94a3b8;
+        }
+
+        body.dark-mode .search-btn {
+            background: #16a34a;
+        }
+
+        body.dark-mode .search-btn:hover {
+            background: #15803d;
         }
 
         .logo {
@@ -288,6 +351,249 @@
         @media (max-width: 700px) {
             .carrito-contenido { width: 100%; }
         }
+
+        /* 💬 Chat */
+        .chat-btn {
+            position: relative;
+            font-size: 22px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .chat-btn:hover { transform: scale(1.15); }
+
+        .chat-badge {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+            background: #ef4444;
+            color: white;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 50%;
+            min-width: 18px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Panel de chat flotante */
+        .chat-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 380px;
+            max-height: 600px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+            display: none;
+            flex-direction: column;
+            z-index: 11999;
+            overflow: hidden;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .chat-panel.activo { display: flex; }
+
+        .chat-header {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .chat-header-title {
+            flex: 1;
+            margin-left: 10px;
+        }
+
+        .cerrar-chat {
+            cursor: pointer;
+            font-size: 20px;
+            transition: transform 0.3s;
+        }
+
+        .cerrar-chat:hover { transform: rotate(90deg); }
+
+        .chat-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-lista {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .chat-item {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-item:hover { background: #f9fafb; }
+
+        .chat-item-user {
+            font-weight: 500;
+            color: #111827;
+        }
+
+        .chat-item-badge {
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 50%;
+            min-width: 16px;
+            text-align: center;
+        }
+
+        .chat-vacio {
+            color: #9ca3b8;
+            text-align: center;
+            padding: 30px 10px;
+            font-size: 0.9rem;
+        }
+
+        /* Ventana de mensajes */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .mensaje {
+            display: flex;
+            margin-bottom: 8px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .mensaje.propio {
+            justify-content: flex-end;
+        }
+
+        .mensaje-contenido {
+            max-width: 70%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            font-size: 0.9rem;
+        }
+
+        .mensaje-propio .mensaje-contenido {
+            background: #16a34a;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .mensaje-otro .mensaje-contenido {
+            background: #f0f0f0;
+            color: #111827;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-input-area {
+            border-top: 1px solid #e5e7eb;
+            padding: 12px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            resize: none;
+            max-height: 100px;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #16a34a;
+            box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.1);
+        }
+
+        .chat-send-btn {
+            background: #16a34a;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .chat-send-btn:hover {
+            background: #15803d;
+            transform: translateY(-2px);
+        }
+
+        /* Dark mode para chat */
+        body.dark-mode .chat-panel {
+            background: #0f1724;
+            color: #ffffff;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+        }
+
+        body.dark-mode .chat-content {
+            background: #0f1724;
+        }
+
+        body.dark-mode .chat-item {
+            border-bottom-color: #1a2332;
+            color: #ffffff;
+        }
+
+        body.dark-mode .chat-item:hover { background: #1a2332; }
+
+        body.dark-mode .chat-item-user { color: #ffffff; }
+
+        body.dark-mode .chat-messages {
+            background: #0f1724;
+        }
+
+        body.dark-mode .mensaje-otro .mensaje-contenido {
+            background: #1a2332;
+            color: #ffffff;
+        }
+
+        body.dark-mode .chat-input {
+            background: #1a2332;
+            color: #ffffff;
+            border-color: #2d3e52;
+        }
+
+        body.dark-mode .chat-input::placeholder {
+            color: #94a3b8;
+        }
+
+        body.dark-mode .chat-input-area {
+            border-top-color: #1a2332;
+            background: #0f1724;
+        }
     </style>
 </head>
 <body>
@@ -295,6 +601,13 @@
 <header>
     <nav>
     <a href="{% url 'tienda:home' %}" class="logo"><3 Bebidas Oeste</a>
+        
+        <!-- Buscador central -->
+        <div class="search-container">
+            <input type="text" id="search-input" class="search-input" placeholder="Buscar productos..." autocomplete="off">
+            <button type="button" id="search-btn" class="search-btn" title="Buscar">🔍</button>
+        </div>
+
         <div class="nav-links">
             <a href="{% url 'tienda:productos' %}">Productos</a>
             <!-- Toggle de tema claro/oscuro -->
@@ -303,7 +616,13 @@
             </button>
 
             {% if user.is_authenticated %}
-                <!-- 🛒 Carrito único y funcional -->
+                <!-- � Chat -->
+                <div class="chat-btn" id="abrir-chat" title="Mensajes">
+                    💬
+                    <span id="chat-badge" class="chat-badge" style="display:none;">0</span>
+                </div>
+
+                <!-- �🛒 Carrito único y funcional -->
                 <div class="carrito" id="abrir-carrito" title="Ver carrito">
                     🛒
                     <span id="contador-carrito" class="contador-carrito">
@@ -355,8 +674,36 @@
 </div>
 
 <footer>
-    <p>© 2025 <span>TuTienda</span>. Todos los derechos reservados para chriskapo y blasphemian.</p>
+    <p>© 2025 <span>Bebidas Oeste</span>. Todos los derechos reservados.</p>
 </footer>
+
+<!-- 💬 Panel de chat flotante -->
+<div class="chat-panel" id="chat-panel">
+    <div class="chat-header">
+        <span class="chat-header-title">Mensajes</span>
+        <span class="cerrar-chat" id="cerrar-chat">×</span>
+    </div>
+    
+    <!-- Lista de conversaciones -->
+    <div class="chat-content" id="chat-list-view">
+        <ul class="chat-lista" id="chat-list">
+            <li class="chat-vacio">No tienes mensajes</li>
+        </ul>
+    </div>
+    
+    <!-- Vista de conversación individual -->
+    <div class="chat-content" id="chat-messages-view" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #e5e7eb;">
+            <button id="volver-chat" style="background:none; border:none; cursor:pointer; color:#16a34a; font-size:18px;">← Volver</button>
+            <span id="chat-user-name" style="font-weight:600; color:#111827;"></span>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area">
+            <textarea class="chat-input" id="chat-input" placeholder="Escribe un mensaje..." rows="1"></textarea>
+            <button class="chat-send-btn" id="chat-send-btn">Enviar</button>
+        </div>
+    </div>
+</div>
 
 <!-- ⚙️ Script funcional -->
 <script>
@@ -534,6 +881,211 @@
                         localStorage.setItem('theme', next);
                         applyTheme(next);
                     });
+
+                    // ⚙️ Funcionalidad de búsqueda
+                    const searchInput = document.getElementById('search-input');
+                    const searchBtn = document.getElementById('search-btn');
+                    
+                    function performSearch() {
+                        const query = searchInput.value.trim();
+                        if (query) {
+                            // Redirigir a la página de búsqueda
+                            window.location.href = `/productos/?buscar=${encodeURIComponent(query)}`;
+                        }
+                    }
+                    
+                    // Búsqueda con click en botón
+                    searchBtn?.addEventListener('click', performSearch);
+                    
+                    // Búsqueda al presionar Enter
+                    searchInput?.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            performSearch();
+                        }
+                    });
+
+                    // 💬 Funcionalidad de Chat
+                    const chatBtn = document.getElementById('abrir-chat');
+                    const chatPanel = document.getElementById('chat-panel');
+                    const cerrarChat = document.getElementById('cerrar-chat');
+                    const chatListView = document.getElementById('chat-list-view');
+                    const chatMessagesView = document.getElementById('chat-messages-view');
+                    const volverChat = document.getElementById('volver-chat');
+                    const chatList = document.getElementById('chat-list');
+                    const chatMessages = document.getElementById('chat-messages');
+                    const chatInput = document.getElementById('chat-input');
+                    const chatSendBtn = document.getElementById('chat-send-btn');
+                    const chatUserName = document.getElementById('chat-user-name');
+                    const chatBadge = document.getElementById('chat-badge');
+
+                    let usuarioActualChat = null;
+                    let pollInterval = null;
+
+                    function abrirChat() {
+                        chatPanel.classList.add('activo');
+                        // Cargar inmediatamente al abrir
+                        cargarConversaciones();
+                        // Limpiar intervalo anterior si existe
+                        if (pollInterval) clearInterval(pollInterval);
+                        // Configurar polling cada 2 segundos para ser más responsivo
+                        pollInterval = setInterval(() => {
+                            cargarConversaciones();
+                            // Si hay un usuario activo en chat, también actualizar sus mensajes
+                            if (usuarioActualChat) {
+                                cargarMensajes(usuarioActualChat);
+                            }
+                        }, 2000);
+                    }
+
+                    function cerrarChatPanel() {
+                        chatPanel.classList.remove('activo');
+                        if (pollInterval) clearInterval(pollInterval);
+                    }
+
+                    chatBtn?.addEventListener('click', abrirChat);
+                    cerrarChat?.addEventListener('click', cerrarChatPanel);
+
+                    function cargarConversaciones() {
+                        fetch('/chat/conversaciones/')
+                            .then(res => res.json())
+                            .then(data => {
+                                chatList.innerHTML = '';
+                                if (data.conversaciones.length === 0) {
+                                    chatList.innerHTML = '<li class="chat-vacio">No tienes mensajes</li>';
+                                } else {
+                                    let totalNoLeidos = 0;
+                                    data.conversaciones.forEach(conv => {
+                                        totalNoLeidos += conv.no_leidos;
+                                        const li = document.createElement('li');
+                                        li.className = 'chat-item';
+                                        li.innerHTML = `
+                                            <div>
+                                                <div class="chat-item-user">@${conv.username}</div>
+                                                <small style="color:#6b7280;">${conv.ultimo_mensaje}</small>
+                                            </div>
+                                            ${conv.no_leidos > 0 ? `<div class="chat-item-badge">${conv.no_leidos}</div>` : ''}
+                                        `;
+                                        li.addEventListener('click', () => abrirConversacion(conv.id, conv.username));
+                                        chatList.appendChild(li);
+                                    });
+                                    // Actualizar badge de chat
+                                    if (totalNoLeidos > 0) {
+                                        chatBadge.textContent = totalNoLeidos;
+                                        chatBadge.style.display = 'block';
+                                    } else {
+                                        chatBadge.style.display = 'none';
+                                    }
+                                }
+                            })
+                            .catch(err => console.error('Error cargando conversaciones:', err));
+                    }
+
+                    function abrirConversacion(usuarioId, username) {
+                        usuarioActualChat = usuarioId;
+                        chatListView.style.display = 'none';
+                        chatMessagesView.style.display = 'flex';
+                        chatUserName.textContent = '@' + username;
+                        cargarMensajes(usuarioId);
+                    }
+
+                    // Hacer la función global para que otros scripts la puedan llamar
+                    window.abrirConversacion = abrirConversacion;
+
+                    function cargarMensajes(usuarioId) {
+                        fetch(`/chat/mensajes/${usuarioId}/`)
+                            .then(res => res.json())
+                            .then(data => {
+                                try {
+                                    // Determinar si el usuario estaba pegado al final
+                                    const atBottom = (chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight) < 50;
+
+                                    // Obtener último id existente para solo añadir nuevos mensajes
+                                    const lastEl = chatMessages.lastElementChild;
+                                    const existingLastId = lastEl && lastEl.dataset && lastEl.dataset.msgId ? Number(lastEl.dataset.msgId) : null;
+
+                                    if (!existingLastId) {
+                                        // Primera carga o vista vacía: limpiar y renderizar todo
+                                        chatMessages.innerHTML = '';
+                                        data.mensajes.forEach(msg => {
+                                            const div = document.createElement('div');
+                                            div.className = 'mensaje ' + (msg.es_mio ? 'propio' : 'otro');
+                                            div.dataset.msgId = msg.id;
+                                            div.innerHTML = `<div class="mensaje-contenido">${msg.contenido}</div>`;
+                                            chatMessages.appendChild(div);
+                                        });
+                                        // Siempre llevar al final en la primera carga
+                                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                                    } else {
+                                        // Añadir solo mensajes nuevos (id mayor que existingLastId)
+                                        let added = 0;
+                                        data.mensajes.forEach(msg => {
+                                            if (msg.id <= existingLastId) return; // ya renderizado
+                                            const div = document.createElement('div');
+                                            div.className = 'mensaje ' + (msg.es_mio ? 'propio' : 'otro');
+                                            div.dataset.msgId = msg.id;
+                                            div.innerHTML = `<div class="mensaje-contenido">${msg.contenido}</div>`;
+                                            chatMessages.appendChild(div);
+                                            added += 1;
+                                        });
+
+                                        // Si el usuario estaba al final, desplazarse hacia abajo solo si se agregaron mensajes
+                                        if (atBottom && added > 0) {
+                                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.error('Error procesando mensajes:', e);
+                                }
+                            })
+                            .catch(err => console.error('Error cargando mensajes:', err));
+                    }
+
+                    volverChat?.addEventListener('click', () => {
+                        usuarioActualChat = null;
+                        chatListView.style.display = 'block';
+                        chatMessagesView.style.display = 'none';
+                        cargarConversaciones(); // Recargar conversaciones al volver
+                    });
+
+                    chatSendBtn?.addEventListener('click', enviarMensaje);
+                    chatInput?.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            enviarMensaje();
+                        }
+                    });
+
+                    function enviarMensaje() {
+                        const contenido = chatInput.value.trim();
+                        if (!contenido || !usuarioActualChat) return;
+
+                        fetch('/chat/enviar/', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken'),
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                destinatario_id: usuarioActualChat,
+                                contenido: contenido
+                            })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                chatInput.value = '';
+                                chatInput.style.height = 'auto'; // Resetear altura del textarea
+                                cargarMensajes(usuarioActualChat);
+                                // Recargar conversaciones para que aparezca el nuevo mensaje
+                                cargarConversaciones();
+                                console.log('Mensaje enviado y conversaciones recargadas');
+                            } else {
+                                console.error('Error al enviar mensaje:', data.error);
+                            }
+                        })
+                        .catch(err => console.error('Error enviando mensaje:', err));
+                    }
+
 </script>
 
 
