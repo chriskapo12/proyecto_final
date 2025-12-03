@@ -519,3 +519,60 @@ def obtener_usuarios_disponibles(request):
     """Obtiene lista de todos los usuarios (excepto el actual) para iniciar chat"""
     usuarios = User.objects.exclude(id=request.user.id).values('id', 'username')
     return JsonResponse({'usuarios': list(usuarios)})
+
+
+# 👤 Perfil de Usuario
+@login_required
+def mi_perfil(request):
+    """Vista del perfil del usuario actual con sus productos"""
+    # Asegurar que el perfil existe
+    from .models import Perfil
+    perfil, created = Perfil.objects.get_or_create(usuario=request.user)
+    
+    # Obtener productos del usuario
+    mis_productos = Producto.objects.filter(usuario=request.user).order_by('-id')
+    
+    return render(request, 'tienda/mi_perfil.html', {
+        'perfil': perfil,
+        'mis_productos': mis_productos,
+    })
+
+
+def ver_perfil_usuario(request, usuario_id):
+    """Vista del perfil de cualquier usuario (público)"""
+    from .models import Perfil
+    usuario = get_object_or_404(User, id=usuario_id)
+    perfil, created = Perfil.objects.get_or_create(usuario=usuario)
+    
+    # Obtener productos del usuario
+    productos = Producto.objects.filter(usuario=usuario).order_by('-id')
+    
+    return render(request, 'tienda/perfil_usuario.html', {
+        'perfil': perfil,
+        'usuario_perfil': usuario,
+        'productos': productos,
+    })
+
+
+@login_required
+def editar_perfil(request):
+    """Editar perfil del usuario actual"""
+    from .models import Perfil
+    perfil, created = Perfil.objects.get_or_create(usuario=request.user)
+    
+    if request.method == 'POST':
+        # Actualizar bio
+        bio = request.POST.get('bio', '')
+        perfil.bio = bio
+        
+        # Actualizar foto de perfil si se subió una nueva
+        if 'foto_perfil' in request.FILES:
+            perfil.foto_perfil = request.FILES['foto_perfil']
+        
+        perfil.save()
+        messages.success(request, '¡Perfil actualizado exitosamente!')
+        return redirect('tienda:mi_perfil')
+    
+    return render(request, 'tienda/editar_perfil.html', {
+        'perfil': perfil,
+    })

@@ -2,113 +2,119 @@
 {% load static %}
 
 {% block content %}
-<style>
-  /* Modo oscuro para productos.html */
-  body.dark-mode h2 {
-    color: #ffffff;
-  }
-
-  body.dark-mode div[style*="color:#666"] {
-    color: #d1d5db !important;
-  }
-
-  body.dark-mode h3 {
-    color: #ffffff;
-  }
-
-  body.dark-mode p[style*="text-align:center"] {
-    color: #ffffff;
-  }
-
-  body.dark-mode div[style*="border:1px solid #ddd"] {
-    background: #0f1724;
-    border-color: #2d3e52 !important;
-  }
-
-  body.dark-mode div[style*="border:1px solid #ddd"] a {
-    color: #ffffff;
-  }
-</style>
-
-<div style="display:flex; justify-content:space-between; align-items:center; margin:20px 0;">
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
   <div>
-    <h2 style="margin:0;">🛍️ Productos disponibles</h2>
+    <h2 class="h2 fw-bold text-dark mb-1">🛍️ Productos disponibles</h2>
     {% if buscar %}
-    <p style="color:#666; font-size:0.95rem; margin-top:8px;">Resultados para: <strong>{{ buscar }}</strong></p>
+    <p class="text-muted mb-0">Resultados para: <strong class="text-dark">{{ buscar }}</strong></p>
     {% endif %}
   </div>
   {% if user.is_authenticated %}
-  <a href="{% url 'tienda:agregar_producto' %}"
-    style="background:#16a34a; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:600; display:inline-flex; align-items:center; gap:8px; transition:all 0.3s ease;">
-    <span style="font-size:1.2em;">➕</span>
-    Agregar producto
+  <a href="{% url 'tienda:agregar_producto' %}" class="btn btn-success d-flex align-items-center gap-2 shadow-sm">
+    <i class="bi bi-plus-lg"></i> Agregar producto
   </a>
   {% endif %}
 </div>
 
-<div style="display:flex; flex-wrap:wrap; justify-content:center; gap:20px; margin-top:20px;">
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4">
   {% for producto in productos %}
-  <div
-    style="border:1px solid #ddd; border-radius:10px; width:220px; display:flex; flex-direction:column; padding:15px; box-shadow:0 2px 5px rgba(0,0,0,0.1); transition: transform 0.3s ease, box-shadow 0.3s ease;"
-    onmouseover="this.style.transform='translateY(-5px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.15)'"
-    onmouseout="this.style.transform='';this.style.boxShadow=''">
-    <a href="{% url 'tienda:detalle_producto' producto.id %}"
-      style="text-decoration: none; color: inherit; flex: 1; display: flex; flex-direction: column;">
-      {% if producto.imagen %}
-      <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}"
-        style="width:100%; height:180px; object-fit:cover; border-radius:10px; transition: transform 0.3s ease;"
-        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform=''">
-      {% else %}
-      <img src="{% static 'img/no-image.png' %}" alt="Sin imagen"
-        style="width:100%; height:180px; object-fit:cover; border-radius:10px;">
-      {% endif %}
-      <h3 style="margin-top:10px;">{{ producto.nombre }}</h3>
-      <p style="color:#666; font-size:0.9rem; margin:8px 0; flex: 1; overflow-y:auto; text-align:left; padding:0 5px;">
-        {{ producto.descripcion|default:"Sin descripción"|truncatechars:120 }}
-      </p>
-      <p style="font-weight:bold; color:#28a745; margin-bottom:0;">
-        ${{ producto.precio }}
-      </p>
-    </a>
-    <div
-      style="display:flex; gap:6px; justify-content:space-between; margin-top:12px; width:100%; box-sizing:border-box;">
-      <button class="btn-agregar" data-id="{{ producto.id }}"
-        style="background:#28a745; color:white; border:none; border-radius:8px; padding:8px 6px; cursor:pointer; transition:0.3s; flex:1; display:flex; align-items:center; justify-content:center; height:36px; font-size:0.8rem; min-width:0; max-width:50%;">
-        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">🛒 Agregar</span>
-      </button>
+  <div class="col">
+    <div class="card h-100 border-0 shadow-sm hover-shadow transition-all">
+      <!-- Imagen -->
+      <a href="{% url 'tienda:detalle_producto' producto.id %}" class="text-decoration-none">
+        <div class="card-img-top bg-light d-flex align-items-center justify-content-center p-3" style="height: 200px;">
+          {% if producto.imagen %}
+          <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="img-fluid"
+            style="max-height: 100%; object-fit: contain;">
+          {% else %}
+          <i class="bi bi-card-image display-1 text-secondary opacity-25"></i>
+          {% endif %}
+        </div>
+      </a>
 
-      {% if user.is_authenticated and user != producto.usuario %}
-      <button class="btn-chat-vendedor" data-vendedor-id="{{ producto.usuario.id }}"
-        data-vendedor-nombre="{{ producto.usuario.username }}"
-        style="background:#3182ce; color:white; border:none; border-radius:8px; padding:8px 6px; cursor:pointer; transition:0.3s; flex:1; display:flex; align-items:center; justify-content:center; height:36px; font-size:0.8rem; min-width:0; max-width:50%;">
-        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">💬 Vendedor</span>
-      </button>
-      {% elif user.is_authenticated and producto.usuario == user %}
-      <form method="post" action="{% url 'tienda:eliminar_producto' producto.id %}"
-        style="display:flex; flex:1; min-width:0; max-width:50%;">
-        {% csrf_token %}
-        <button type="submit"
-          style="background:#ef4444; color:white; border:none; border-radius:8px; padding:8px 6px; cursor:pointer; width:100%; height:36px; display:flex; align-items:center; justify-content:center; font-size:0.8rem;">
-          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">🗑 Eliminar</span>
-        </button>
-      </form>
-      {% endif %}
+      <!-- Cuerpo -->
+      <div class="card-body d-flex flex-column">
+        <a href="{% url 'tienda:detalle_producto' producto.id %}" class="text-decoration-none text-dark">
+          <h5 class="card-title fw-bold mb-2 text-truncate">{{ producto.nombre }}</h5>
+        </a>
+        <p class="card-text text-muted small flex-grow-1">{{ producto.descripcion|default:"Sin
+          descripción"|truncatechars:80 }}</p>
+        <h5 class="text-success fw-bold mb-3">${{ producto.precio }}</h5>
+
+        <!-- Botones -->
+        <div class="d-flex gap-2 mt-auto">
+          <button class="btn btn-success flex-grow-1 btn-agregar" data-id="{{ producto.id }}">
+            <i class="bi bi-cart-plus"></i> Agregar
+          </button>
+
+          {% if user.is_authenticated %}
+          {% if user != producto.usuario %}
+          <button class="btn btn-outline-primary btn-chat-vendedor" data-vendedor-id="{{ producto.usuario.id }}"
+            data-vendedor-nombre="{{ producto.usuario.username }}" title="Contactar Vendedor">
+            <i class="bi bi-chat-dots"></i>
+          </button>
+          {% else %}
+          <form method="post" action="{% url 'tienda:eliminar_producto' producto.id %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger" title="Eliminar Producto"
+              onclick="return confirm('¿Estás seguro de eliminar este producto?')">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
+          {% endif %}
+          {% endif %}
+        </div>
+      </div>
     </div>
   </div>
   {% empty %}
-  <p style="text-align:center;">No hay productos disponibles.</p>
+  <div class="col-12 text-center py-5">
+    <div class="text-muted">
+      <i class="bi bi-box-seam display-1 d-block mb-3"></i>
+      <p class="fs-5">No hay productos disponibles.</p>
+    </div>
+  </div>
   {% endfor %}
 </div>
 
+<style>
+  .hover-shadow:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+  }
+
+  .transition-all {
+    transition: all 0.3s ease;
+  }
+
+  /* Dark Mode Adjustments */
+  [data-bs-theme="dark"] .card {
+    background-color: #212529;
+    border-color: #373b3e;
+  }
+
+  [data-bs-theme="dark"] .card-img-top {
+    background-color: #2c3034 !important;
+  }
+
+  [data-bs-theme="dark"] .text-dark {
+    color: #f8f9fa !important;
+  }
+
+  [data-bs-theme="dark"] .text-muted {
+    color: #adb5bd !important;
+  }
+</style>
+
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const botones = document.querySelectorAll(".btn-agregar");
-
-    botones.forEach(boton => {
-      boton.addEventListener("click", () => {
+    // Lógica Agregar al Carrito
+    document.querySelectorAll(".btn-agregar").forEach(boton => {
+      boton.addEventListener("click", (e) => {
+        e.preventDefault();
         const productoId = boton.dataset.id;
+        const originalContent = boton.innerHTML;
 
-        // Petición AJAX
         fetch(`/carrito/agregar/${productoId}/`, {
           method: "GET",
           headers: { "X-Requested-With": "XMLHttpRequest" }
@@ -116,38 +122,38 @@
           .then(res => res.json())
           .then(data => {
             if (data.success) {
-              // Actualiza el contador de carrito en el header
               const contador = document.getElementById("contador-carrito");
               if (contador) contador.textContent = data.total_items;
 
-              // Animación o aviso visual
-              boton.innerHTML = '<span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">✅ Agregado</span>';
-              boton.style.background = "#007bff";
+              boton.classList.remove('btn-success');
+              boton.classList.add('btn-dark');
+              boton.innerHTML = '<i class="bi bi-check-lg"></i> Agregado';
+
               setTimeout(() => {
-                boton.innerHTML = '<span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">🛒 Agregar</span>';
-                boton.style.background = "#28a745";
+                boton.classList.remove('btn-dark');
+                boton.classList.add('btn-success');
+                boton.innerHTML = originalContent;
               }, 1200);
-            } else {
-              alert("No se pudo agregar al carrito 😢");
             }
           })
-          .catch(err => console.error("Error al agregar al carrito:", err));
+          .catch(err => console.error("Error:", err));
       });
     });
 
-    // Botones de chat con vendedor
-    const btnChats = document.querySelectorAll(".btn-chat-vendedor");
-    btnChats.forEach(btnChat => {
-      btnChat.addEventListener("click", (e) => {
+    // Lógica Chat Vendedor
+    document.querySelectorAll('.btn-chat-vendedor').forEach(btn => {
+      btn.addEventListener('click', (e) => {
         e.preventDefault();
-        const vendedorId = btnChat.dataset.vendedorId;
-        const vendedorNombre = btnChat.dataset.vendedorNombre;
+        const vendedorId = btn.dataset.vendedorId;
+        const vendedorNombre = btn.dataset.vendedorNombre;
 
         const chatBtn = document.getElementById('abrir-chat');
         if (chatBtn) {
           chatBtn.click();
           setTimeout(() => {
-            window.abrirConversacion(parseInt(vendedorId), vendedorNombre);
+            if (window.abrirConversacion) {
+              window.abrirConversacion(parseInt(vendedorId), vendedorNombre);
+            }
           }, 500);
         }
       });

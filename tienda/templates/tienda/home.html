@@ -2,331 +2,305 @@
 {% load static %}
 
 {% block content %}
+<div class="row">
+    <!-- Contenido Principal (Productos) -->
+    <div class="col-lg-9 order-lg-1">
+        <!-- Encabezado -->
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold text-dark mb-3">Bienvenido a Bebidas Oeste</h1>
+            {% if user.is_authenticated %}
+            <p class="lead text-muted">¡Hola {{ user.username }}! Disfrutá explorando nuestros productos.</p>
+            {% else %}
+            <p class="lead text-muted">Iniciá sesión o creá una cuenta para ver los productos.</p>
+            {% endif %}
+        </div>
 
-
-
-<!-- Hacemos que esta página use todo el ancho: anulamos temporalmente el max-width de main -->
-<style>
-    /* Anular el max-width solo para esta página (se carga después del CSS global) */
-    main { max-width: none !important; padding-top: 40px; padding-bottom: 40px; }
-
-    /* Contenedor principal que dejará espacio para el panel de filtro fijo a la derecha */
-    #home-content { width: calc(100% - 260px); margin-right: 260px; padding: 20px 40px; }
-
-    /* Panel de filtro fijo pegado a la derecha */
-    .filter-panel {
-        position: fixed;
-        right: 0;
-        top: 96px; /* debajo del header */
-        width: 260px;
-        max-width: 30%;
-        z-index: 1100;
-        padding: 10px;
-    }
-
-    /* Grilla de productos que ocupa el ancho disponible en #home-content */
-    .grid-productos {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-        gap: 30px;
-        width: 100%;
-    }
-
-    /* Tarjeta de producto: usar flex para mantener el botón siempre al fondo */
-    .producto-card {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between; /* empuja el botón al final */
-        min-height: 420px; /* altura consistente para todas las tarjetas */
-        box-sizing: border-box;
-        background: white;
-        border-radius: 15px;
-        overflow: hidden;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    /* El enlace que envuelve la imagen y la información debe ocupar el espacio disponible */
-    .producto-card > a {
-        display: flex;
-        flex-direction: column;
-        flex: 1 1 auto;
-        text-decoration: none;
-        color: inherit;
-        width: 100%;
-    }
-
-    /* Asegurar que el contenedor de la imagen no se estire */
-    .producto-card > a > div:first-child {
-        flex: 0 0 auto; /* mantiene la altura fija de la imagen */
-    }
-
-    /* Información del producto: ocupa el espacio restante */
-    .producto-card > a > div:last-child {
-        flex: 1 1 auto;
-        display: flex;
-        flex-direction: column;
-    }
-
-    /* Botón de agregar: alineado al final */
-    .producto-card .btn-agregar {
-        align-self: center;
-        margin-top: auto;
-        margin-bottom: 15px;
-    }
-
-    /* Ajustes responsive: en pantallas pequeñas el panel se convierte en relativo y los productos usan el 100% */
-    @media (max-width: 1000px) {
-        #home-content { width: 100%; margin-right: 0; padding: 20px; }
-        .filter-panel { position: static; width: auto; max-width: none; margin-top: 20px; }
-        .grid-productos { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 700px) {
-        .grid-productos { grid-template-columns: 1fr; gap: 20px; }
-    }
-
-    /* Modo oscuro: ajustes para home.html */
-    body.dark-mode #home-content h1 { color: #ffffff; }
-    body.dark-mode #home-content > div:first-child p { color: #ffffff; }
-    body.dark-mode h2 { color: #ffffff; }
-    body.dark-mode .producto-card a div:nth-child(2) { color: #ffffff; }
-    body.dark-mode .producto-card a div:nth-child(2) div:nth-child(1) { color: #d1d5db; }
-    body.dark-mode .producto-card a div:nth-child(2) div:nth-child(3) { color: #d1d5db; }
-    body.dark-mode #loading-indicator { color: #ffffff; }
-    body.dark-mode .filter-panel div { background: #0f1724; color: #ffffff; }
-    body.dark-mode .filter-panel label { color: #ffffff; }
-    body.dark-mode .filter-panel select { background: #1a2332; color: #ffffff; border-color: #2d3e52; }
-</style>
-
-<div id="home-content">
-    <!-- Encabezado -->
-    <div style="text-align: center; margin-bottom: 50px;">
-        <h1 style="font-size: 3em; color: #2d3748; margin-bottom: 10px;">Bienvenido a Bebidas Oeste</h1>
-        {% if user.is_authenticated %}
-            <p style="color: #4a5568; font-size: 1.2em;">¡Hola {{ user.username }}! Disfrutá explorando nuestros productos.</p>
-        {% else %}
-            <p style="color: #4a5568; font-size: 1.2em;">Iniciá sesión o creá una cuenta para ver los productos.</p>
-        {% endif %}
-    </div>
-
-    <!-- Filtro y productos en cuadrícula -->
-    <div style="display: flex; align-items: flex-start; gap: 20px;">
-        <!-- Productos en cuadrícula -->
-        <div style="flex:1;">
-            <h2 style="font-size: 2em; color: #2d3748; margin-bottom: 30px; display: flex; align-items: center; gap: 10px;">
-                Últimos productos
-                <span style="font-size: 1.2em; animation: flame 0.5s infinite alternate;">🔥</span>
+        <!-- Título Sección -->
+        <div class="d-flex align-items-center mb-4">
+            <h2 class="h2 fw-bold text-dark mb-0">
+                Últimos productos <span class="fs-4">🔥</span>
             </h2>
-            <div class="grid-productos" id="products-container">
-                {% for producto in ultimos_productos %}
-                <div class="producto-card" data-id="{{ producto.id }}">
-                    <a href="{% url 'tienda:detalle_producto' producto.id %}" style="text-decoration: none; color: inherit; width: 100%;">
-                        <div style="width: 100%; height: 180px; background: #e5e7eb; display: flex; align-items: center; justify-content: center;">
+        </div>
+
+        <!-- Grid de Productos -->
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4" id="products-container">
+            {% for producto in ultimos_productos %}
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm hover-shadow transition-all">
+                    <!-- Imagen -->
+                    <a href="{% url 'tienda:detalle_producto' producto.id %}" class="text-decoration-none">
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center p-3"
+                            style="height: 200px;">
                             {% if producto.imagen %}
-                                <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" style="max-width:90%; max-height:90%; object-fit:contain; display:block; margin:auto;">
+                            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="img-fluid"
+                                style="max-height: 100%; object-fit: contain;">
                             {% else %}
-                                <img src="{% static 'img/no-image.png' %}" alt="Sin imagen" style="max-width:90%; max-height:90%; object-fit:contain; display:block; margin:auto;">
+                            <i class="bi bi-card-image display-1 text-secondary opacity-25"></i>
                             {% endif %}
                         </div>
-                        <div style="padding: 20px 15px 10px 15px; text-align:left; width:100%;">
-                            <div style="font-size:1.1em; color:#374151; font-weight:600; margin-bottom:8px;">{{ producto.get_categoria_display }}</div>
-                            <div style="font-size:1.3em; color:#111827; font-weight:700; margin-bottom:6px;">{{ producto.nombre }}</div>
-                            <div style="color:#4b5563; font-size:1em; margin-bottom:10px;">{{ producto.descripcion|truncatechars:80 }}</div>
-                            <div style="font-size:1.2em; color:#16a34a; font-weight:700; margin-bottom:10px;">${{ producto.precio }}</div>
-                        </div>
                     </a>
-                    <div style="display:flex; gap:8px; padding:0 15px 15px 15px; width:100%; box-sizing:border-box;">
-                        <button class="btn-agregar" data-id="{{ producto.id }}"
-                                style="flex:1; background: #48bb78; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; font-size:1.1em;">
-                            🛒
-                        </button>
-                        {% if user.is_authenticated and user != producto.usuario %}
-                        <button class="btn-chat-vendedor-card" data-vendedor-id="{{ producto.usuario.id }}" data-vendedor-nombre="{{ producto.usuario.username }}"
-                                style="flex:1; background: #3182ce; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; font-size:1.1em;">
-                            💬
-                        </button>
-                        {% endif %}
+
+                    <!-- Cuerpo -->
+                    <div class="card-body d-flex flex-column">
+                        <div class="mb-2">
+                            <span class="badge bg-info bg-opacity-10 text-info rounded-pill">{{
+                                producto.get_categoria_display }}</span>
+                        </div>
+                        <a href="{% url 'tienda:detalle_producto' producto.id %}"
+                            class="text-decoration-none text-dark">
+                            <h5 class="card-title fw-bold mb-1 text-truncate">{{ producto.nombre }}</h5>
+                        </a>
+                        <p class="card-text text-muted small flex-grow-1">{{ producto.descripcion|truncatechars:60 }}
+                        </p>
+                        <h5 class="text-success fw-bold mb-3">${{ producto.precio }}</h5>
+
+                        <!-- Botones -->
+                        <div class="d-flex gap-2 mt-auto">
+                            <button class="btn btn-success flex-grow-1 btn-agregar" data-id="{{ producto.id }}">
+                                <i class="bi bi-cart-plus"></i>
+                            </button>
+                            {% if user.is_authenticated and user != producto.usuario %}
+                            <button class="btn btn-outline-primary btn-chat-vendedor"
+                                data-vendedor-id="{{ producto.usuario.id }}"
+                                data-vendedor-nombre="{{ producto.usuario.username }}">
+                                <i class="bi bi-chat-dots"></i>
+                            </button>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
-                {% empty %}
-                <p style="text-align: center; color: #718096; grid-column: 1/-1;">No hay productos disponibles aún.</p>
-                {% endfor %}
             </div>
-            <div id="loading-indicator" style="text-align:center; padding:20px; display:none; color:#4a5568;">Cargando más productos...</div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <p class="text-muted fs-5">No hay productos disponibles aún.</p>
+            </div>
+            {% endfor %}
         </div>
-        <!-- El filtro será un panel fijo pegado al borde derecho -->
-        <div class="filter-panel">
-            <div style="background:white; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.08); padding:15px;">
-                <form method="get" style="display:flex; flex-direction:column; gap:10px; align-items:flex-start;">
-                    <label for="categoria" style="font-weight:600; color:#374151; font-size:0.95em;">Filtrar:</label>
-                    <select name="categoria" id="categoria" style="padding:6px 10px; border-radius:8px; border:2px solid #e5e7eb; font-size:0.95em; width:100%;">
-                        <option value="">Todas</option>
-                        {% for value, label in categorias %}
-                            <option value="{{ value }}" {% if categoria_seleccionada == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="submit" style="background:#16a34a; color:white; border:none; border-radius:8px; padding:6px 12px; font-weight:600; cursor:pointer; width:100%; font-size:0.95em;">Filtrar</button>
-                </form>
+
+        <!-- Loading Spinner -->
+        <div id="loading-indicator" class="text-center py-4 d-none">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel Lateral (Filtros) -->
+    <div class="col-lg-3 order-lg-2 mb-4 mb-lg-0">
+        <div class="sticky-top" style="top: 90px; z-index: 1000;">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-3"><i class="bi bi-funnel"></i> Filtros</h5>
+                    <form method="get">
+                        <div class="mb-3">
+                            <label for="categoria" class="form-label fw-medium">Categoría</label>
+                            <select name="categoria" id="categoria" class="form-select" onchange="this.form.submit()">
+                                <option value="">Todas</option>
+                                {% for value, label in categorias %}
+                                <option value="{{ value }}" {% if categoria_seleccionada==value %}selected{% endif %}>{{
+                                    label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="d-grid">
+                            <a href="{% url 'tienda:home' %}" class="btn btn-outline-secondary btn-sm">Limpiar
+                                Filtros</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Banner Promocional (Opcional) -->
+            <div class="card border-0 shadow-sm mt-3 bg-primary text-white">
+                <div class="card-body text-center">
+                    <h5 class="fw-bold">¡Oferta Especial!</h5>
+                    <p class="small mb-2">Envío gratis en compras mayores a $10.000</p>
+                    <i class="bi bi-truck display-4"></i>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-
 <style>
-@keyframes flame {
-    from { transform: scale(1); }
-    to { transform: scale(1.2); }
-}
+    .hover-shadow:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+    }
+
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+
+    /* Dark Mode Adjustments */
+    [data-bs-theme="dark"] .card {
+        background-color: #212529;
+        border-color: #373b3e;
+    }
+
+    [data-bs-theme="dark"] .card-img-top {
+        background-color: #2c3034 !important;
+    }
+
+    [data-bs-theme="dark"] .text-dark {
+        color: #f8f9fa !important;
+    }
+
+    [data-bs-theme="dark"] .text-muted {
+        color: #adb5bd !important;
+    }
 </style>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-    const botones = document.querySelectorAll(".btn-agregar");
+    document.addEventListener("DOMContentLoaded", () => {
+        // Lógica Agregar al Carrito
+        const attachCartListeners = () => {
+            document.querySelectorAll(".btn-agregar").forEach(boton => {
+                // Evitar duplicar listeners
+                if (boton.dataset.listening) return;
+                boton.dataset.listening = "true";
 
-    botones.forEach(boton => {
-        boton.addEventListener("click", (e) => {
-            e.preventDefault(); // Prevenir la navegación al detalle
-            const productoId = boton.dataset.id;
+                boton.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    const productoId = boton.dataset.id;
+                    const originalContent = boton.innerHTML;
 
-            fetch(`/carrito/agregar/${productoId}/`, {
-                method: "GET",
-                headers: { "X-Requested-With": "XMLHttpRequest" }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    const contador = document.getElementById("contador-carrito");
-                    if (contador) contador.textContent = data.total_items;
+                    fetch(`/carrito/agregar/${productoId}/`, {
+                        method: "GET",
+                        headers: { "X-Requested-With": "XMLHttpRequest" }
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                const contador = document.getElementById("contador-carrito");
+                                if (contador) contador.textContent = data.total_items;
 
-                    boton.style.background = "#2f855a";
-                    boton.textContent = "✅";
-                    setTimeout(() => {
-                        boton.style.background = "#48bb78";
-                        boton.textContent = "🛒";
-                    }, 1200);
-                } else {
-                    alert("No se pudo agregar al carrito");
-                }
-            })
-            .catch(err => console.error("Error:", err));
-        });
-    });
-});
-</script>
-<script>
-// Scroll infinito: cargar más productos cuando el usuario baja
-document.addEventListener('DOMContentLoaded', function () {
-    const container = document.getElementById('products-container');
-    const loading = document.getElementById('loading-indicator');
-    let page = 1; // la página 1 ya está cargada desde el servidor
-    const pageSize = 8; // coincidir con lo que usa la vista
-    const currentCategory = "{{ categoria_seleccionada|default:'' }}";
-    let loadingMore = false;
-    let hasNext = true;
+                                boton.classList.remove('btn-success');
+                                boton.classList.add('btn-dark');
+                                boton.innerHTML = '<i class="bi bi-check-lg"></i>';
 
-    function createCard(prod) {
-        const div = document.createElement('div');
-        div.className = 'producto-card';
-        div.dataset.id = prod.id;
-
-        const imagenUrl = prod.imagen || '{% static "img/no-image.png" %}';
-
-        div.innerHTML = `
-            <a href="/productos/${prod.id}/" style="text-decoration: none; color: inherit; width: 100%;">
-                <div style="width: 100%; height: 180px; background: #e5e7eb; display: flex; align-items: center; justify-content: center;">
-                    <img src="${imagenUrl}" alt="${prod.nombre}" style="max-width:90%; max-height:90%; object-fit:contain; display:block; margin:auto;">
-                </div>
-                <div style="padding: 20px 15px 10px 15px; text-align:left; width:100%;">
-                    <div style="font-size:1.1em; color:#374151; font-weight:600; margin-bottom:8px;">${prod.categoria}</div>
-                    <div style="font-size:1.3em; color:#111827; font-weight:700; margin-bottom:6px;">${prod.nombre}</div>
-                    <div style="color:#4b5563; font-size:1em; margin-bottom:10px;">${prod.descripcion.substring(0, 80)}</div>
-                    <div style="font-size:1.2em; color:#16a34a; font-weight:700; margin-bottom:10px;">$${prod.precio}</div>
-                </div>
-            </a>
-            <div style="display:flex; gap:8px; padding:0 15px 15px 15px; width:100%; box-sizing:border-box; align-items:stretch;">
-                <button class="btn-agregar" data-id="${prod.id}"
-                        style="flex:1; background: #48bb78; color: white; border: none; padding: 0 18px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; font-size:1.1em; display:flex; align-items:center; justify-content:center; height:36px; white-space:nowrap; line-height:1;">
-                    🛒
-                </button>
-                <button class="btn-chat-vendedor-card" data-vendedor-id="${prod.usuario_id}" data-vendedor-nombre="${prod.usuario_nombre}"
-                        style="flex:1; background: #3182ce; color: white; border: none; padding: 0 18px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; font-size:1.1em; display:flex; align-items:center; justify-content:center; height:36px; visibility:hidden;" id="chat-btn-${prod.id}">
-                    💬
-                </button>
-            </div>
-        `;
-
-        // Añadir listener al botón para agregar al carrito (misma lógica que los botones iniciales)
-        const btn = div.querySelector('.btn-agregar');
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            fetch(`/carrito/agregar/${prod.id}/`, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                .then(r => r.json()).then(data => {
-                    if (data.success) {
-                        const contador = document.getElementById('contador-carrito');
-                        if (contador) contador.textContent = data.total_items;
-                        btn.style.background = '#2f855a';
-                        btn.textContent = '✅';
-                        setTimeout(() => { btn.style.background = '#48bb78'; btn.textContent = '🛒'; }, 1200);
-                    }
-                }).catch(console.error);
-        });
-
-        // Añadir listener al botón de chat
-        const btnChat = div.querySelector('.btn-chat-vendedor-card');
-        if (btnChat) {
-            btnChat.style.visibility = 'visible'; // Mostrar el botón si el usuario está autenticado
-            btnChat.addEventListener('click', (e) => {
-                e.preventDefault();
-                const vendedorId = btnChat.dataset.vendedorId;
-                const vendedorNombre = btnChat.dataset.vendedorNombre;
-                
-                const chatBtn = document.getElementById('abrir-chat');
-                if (chatBtn) {
-                    chatBtn.click();
-                    setTimeout(() => {
-                        window.abrirConversacion(parseInt(vendedorId), vendedorNombre);
-                    }, 500);
-                }
+                                setTimeout(() => {
+                                    boton.classList.remove('btn-dark');
+                                    boton.classList.add('btn-success');
+                                    boton.innerHTML = originalContent;
+                                }, 1200);
+                            }
+                        });
+                });
             });
-        }
+        };
 
-        return div;
+        // Lógica Chat Vendedor
+        const attachChatListeners = () => {
+            document.querySelectorAll('.btn-chat-vendedor').forEach(btn => {
+                if (btn.dataset.listening) return;
+                btn.dataset.listening = "true";
+
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const vendedorId = btn.dataset.vendedorId;
+                    const vendedorNombre = btn.dataset.vendedorNombre;
+
+                    const chatBtn = document.getElementById('abrir-chat');
+                    if (chatBtn) {
+                        chatBtn.click();
+                        setTimeout(() => {
+                            if (window.abrirConversacion) {
+                                window.abrirConversacion(parseInt(vendedorId), vendedorNombre);
+                            }
+                        }, 500);
+                    }
+                });
+            });
+        };
+
+        attachCartListeners();
+        attachChatListeners();
+
+        // Scroll Infinito
+        const container = document.getElementById('products-container');
+        const loading = document.getElementById('loading-indicator');
+        let page = 1;
+        const pageSize = 8;
+        const currentCategory = "{{ categoria_seleccionada|default:'' }}";
+        let loadingMore = false;
+        let hasNext = true;
+
+        function createCardHTML(prod) {
+            const imagenUrl = prod.imagen || '';
+            const imgTag = imagenUrl
+                ? `<img src="${imagenUrl}" alt="${prod.nombre}" class="img-fluid" style="max-height: 100%; object-fit: contain;">`
+                : `<i class="bi bi-card-image display-1 text-secondary opacity-25"></i>`;
+
+            return `
+            <div class="col fade-in">
+                <div class="card h-100 border-0 shadow-sm hover-shadow transition-all">
+                    <a href="/productos/${prod.id}/" class="text-decoration-none">
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center p-3" style="height: 200px;">
+                            ${imgTag}
+                        </div>
+                    </a>
+                    <div class="card-body d-flex flex-column">
+                        <div class="mb-2">
+                            <span class="badge bg-info bg-opacity-10 text-info rounded-pill">${prod.categoria}</span>
+                        </div>
+                        <a href="/productos/${prod.id}/" class="text-decoration-none text-dark">
+                            <h5 class="card-title fw-bold mb-1 text-truncate">${prod.nombre}</h5>
+                        </a>
+                        <p class="card-text text-muted small flex-grow-1">${prod.descripcion.substring(0, 60)}...</p>
+                        <h5 class="text-success fw-bold mb-3">$${prod.precio}</h5>
+                        <div class="d-flex gap-2 mt-auto">
+                            <button class="btn btn-success flex-grow-1 btn-agregar" data-id="${prod.id}">
+                                <i class="bi bi-cart-plus"></i>
+                            </button>
+                            ${prod.usuario_id != {{ user.id |default: 0 }
+        } ?`
+                            <button class="btn btn-outline-primary btn-chat-vendedor" 
+                                    data-vendedor-id="${prod.usuario_id}" 
+                                    data-vendedor-nombre="${prod.usuario_nombre}">
+                                <i class="bi bi-chat-dots"></i>
+                            </button>` : ''
+    }
+                        </div >
+                    </div >
+                </div >
+            </div >
+            `;
     }
 
     async function loadMore() {
         if (loadingMore || !hasNext) return;
         loadingMore = true;
-        loading.style.display = 'block';
+        loading.classList.remove('d-none');
         page += 1;
 
         try {
-            const paramsObj = { page: page, page_size: pageSize };
-            if (currentCategory) paramsObj.categoria = currentCategory;
-            const params = new URLSearchParams(paramsObj);
-            const res = await fetch(`/productos/api/?${params.toString()}`);
-            if (!res.ok) throw new Error('Error al cargar productos');
+            const params = new URLSearchParams({ page, page_size: pageSize, categoria: currentCategory });
+            // Aseguramos que la URL no tenga espacios
+            const res = await fetch(`/ productos / api /? ${ params }`);
+            if (!res.ok) throw new Error('Error en la respuesta de la API');
+            
             const data = await res.json();
+            
             hasNext = data.has_next;
             data.products.forEach(prod => {
-                const card = createCard(prod);
-                container.appendChild(card);
+                container.insertAdjacentHTML('beforeend', createCardHTML(prod));
             });
+            
+            attachCartListeners();
+            attachChatListeners();
         } catch (err) {
-            console.error(err);
-            page -= 1; // revertir contador
+            console.error("Error cargando más productos:", err);
+            page -= 1;
         } finally {
             loadingMore = false;
-            loading.style.display = 'none';
+            loading.classList.add('d-none');
         }
     }
 
-    // Detectar scroll cerca del fondo
     window.addEventListener('scroll', () => {
         if (!hasNext || loadingMore) return;
-        const scrollPos = window.innerHeight + window.scrollY;
-        const threshold = document.body.offsetHeight - 300; // 300px antes del final
-        if (scrollPos >= threshold) {
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 300) {
             loadMore();
         }
     });

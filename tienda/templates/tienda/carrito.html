@@ -1,104 +1,166 @@
 {% extends 'tienda/base.html' %}
 
+{% block title %}Mi Carrito - Bebidas Oeste{% endblock %}
+
 {% block content %}
-<h2 style="text-align:center; margin-top:20px;">🛒 Tu carrito</h2>
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+    <h2 class="text-center mb-4 fw-bold text-dark"><i class="bi bi-cart3"></i> Tu Carrito</h2>
 
-{% if items %}
-<table style="width:80%; margin:30px auto; border-collapse:collapse;">
-  <tr style="background:#f3f4f6;">
-    <th>Producto</th>
-    <th>Precio</th>
-    <th>Cantidad</th>
-    <th>Subtotal</th>
-    <th></th>
-  </tr>
-  {% for item in items %}
-  <tr style="text-align:center; border-bottom:1px solid #ddd;">
-    <td>{{ item.producto.nombre }}</td>
-    <td>${{ item.producto.precio }}</td>
-    <td>
-      <button class="btn-cantidad" data-id="{{ item.producto.id }}" data-accion="restar"
-              style="border:none; background:#ef4444; color:white; padding:4px 8px; border-radius:5px; cursor:pointer;">➖</button>
-      <span id="cantidad-{{ item.producto.id }}">{{ item.cantidad }}</span>
-      <button class="btn-cantidad" data-id="{{ item.producto.id }}" data-accion="sumar"
-              style="border:none; background:#16a34a; color:white; padding:4px 8px; border-radius:5px; cursor:pointer;">➕</button>
-    </td>
-  <td>$<span id="subtotal-{{ item.producto.id }}">{{ item.subtotal|floatformat:2 }}</span></td>
+    {% if items %}
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+              <tr>
+                <th class="ps-4 py-3">Producto</th>
+                <th class="text-center">Precio</th>
+                <th class="text-center">Cantidad</th>
+                <th class="text-center">Subtotal</th>
+                <th class="text-end pe-4">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in items %}
+              <tr>
+                <td class="ps-4">
+                  <div class="d-flex align-items-center">
+                    {% if item.producto.imagen %}
+                    <img src="{{ item.producto.imagen.url }}" alt="{{ item.producto.nombre }}" class="rounded me-3"
+                      width="60" height="60" style="object-fit: cover;">
+                    {% else %}
+                    <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center"
+                      style="width: 60px; height: 60px;">
+                      <i class="bi bi-image text-muted"></i>
+                    </div>
+                    {% endif %}
+                    <div>
+                      <h6 class="mb-0 fw-bold">{{ item.producto.nombre }}</h6>
+                      <small class="text-muted">{{ item.producto.get_categoria_display }}</small>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center">${{ item.producto.precio }}</td>
+                <td class="text-center">
+                  <div class="btn-group btn-group-sm" role="group">
+                    <button class="btn btn-outline-secondary btn-cantidad" data-id="{{ item.producto.id }}"
+                      data-accion="restar"><i class="bi bi-dash"></i></button>
+                    <span class="btn btn-outline-secondary disabled fw-bold text-dark px-3"
+                      id="cantidad-{{ item.producto.id }}">{{ item.cantidad }}</span>
+                    <button class="btn btn-outline-secondary btn-cantidad" data-id="{{ item.producto.id }}"
+                      data-accion="sumar"><i class="bi bi-plus"></i></button>
+                  </div>
+                </td>
+                <td class="text-center fw-bold text-success">$<span id="subtotal-{{ item.producto.id }}">{{
+                    item.subtotal|floatformat:2 }}</span></td>
+                <td class="text-end pe-4">
+                  <a href="{% url 'tienda:eliminar_del_carrito' item.producto.id %}"
+                    class="btn btn-outline-danger btn-sm" title="Eliminar">
+                    <i class="bi bi-trash"></i>
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
-    <!-- 🔧 CORREGIDO: agregar 'tienda:' -->
-    <td>
-      <a href="{% url 'tienda:eliminar_del_carrito' item.producto.id %}" 
-         style="color:white; background:#ef4444; padding:4px 10px; border-radius:6px; text-decoration:none;">
-         🗑
+    <div class="row justify-content-end">
+      <div class="col-md-5 col-lg-4">
+        <div class="card border-0 shadow-sm bg-light">
+          <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h4 class="mb-0 fw-bold">Total</h4>
+              <h3 class="mb-0 fw-bold text-success">$<span id="total">{{ total|floatformat:2 }}</span></h3>
+            </div>
+
+            <form method="post" action="{% url 'tienda:procesar_pago' %}">
+              {% csrf_token %}
+              <input type="hidden" name="metodo_pago" value="mercadopago">
+              <input type="hidden" name="nombre"
+                value="{% if user.first_name or user.last_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}">
+              <input type="hidden" name="email" value="{{ user.email }}">
+
+              <button type="submit" id="btn-pagar" class="btn btn-success w-100 py-3 fw-bold shadow-sm">
+                <i class="bi bi-credit-card me-2"></i> Pagar Ahora
+              </button>
+            </form>
+
+            <div class="text-center mt-3">
+              <a href="{% url 'tienda:productos' %}" class="text-decoration-none text-muted small">
+                <i class="bi bi-arrow-left"></i> Seguir comprando
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% else %}
+    <div class="text-center py-5">
+      <div class="mb-4">
+        <i class="bi bi-cart-x display-1 text-muted opacity-50"></i>
+      </div>
+      <h3 class="text-muted fw-light mb-4">Tu carrito está vacío</h3>
+      <a href="{% url 'tienda:productos' %}" class="btn btn-primary btn-lg shadow-sm">
+        <i class="bi bi-shop me-2"></i> Ir a la tienda
       </a>
-    </td>
-  </tr>
-  {% endfor %}
-</table>
-
-<h3 style="text-align:center;">Total: $<span id="total">{{ total|floatformat:2 }}</span></h3>
-<div style="text-align:center; margin-top:18px;">
-  <form method="post" action="{% url 'tienda:procesar_pago' %}">
-    {% csrf_token %}
-    <input type="hidden" name="metodo_pago" value="mercadopago">
-    <input type="hidden" name="nombre" value="{% if user.first_name or user.last_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}">
-    <input type="hidden" name="email" value="{{ user.email }}">
-    <button type="submit" id="btn-pagar" style="background:#16a34a; color:white; padding:12px 22px; border-radius:8px; text-decoration:none; font-weight:700; display:inline-block; border:none; cursor:pointer;">
-      Pagar ahora →
-    </button>
-  </form>
+    </div>
+    {% endif %}
+  </div>
 </div>
 
-{% else %}
-<p style="text-align:center;">Tu carrito está vacío 🛍️</p>
-{% endif %}
-
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-  // helper para leer cookie CSRF
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
+  document.addEventListener("DOMContentLoaded", function () {
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
         }
       }
+      return cookieValue;
     }
-    return cookieValue;
-  }
 
-  const botones = document.querySelectorAll(".btn-cantidad");
+    const botones = document.querySelectorAll(".btn-cantidad");
 
-  botones.forEach(boton => {
-    boton.addEventListener("click", function() {
-      const productoId = this.dataset.id;
-      const accion = this.dataset.accion;
+    botones.forEach(boton => {
+      boton.addEventListener("click", function () {
+        const productoId = this.dataset.id;
+        const accion = this.dataset.accion;
 
-      fetch("{% url 'tienda:actualizar_cantidad' %}", {
-        method: "POST",
-        headers: {
-          "X-CSRFToken": getCookie('csrftoken'),
-          "X-Requested-With": "XMLHttpRequest",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ producto_id: productoId, accion: accion })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) return alert(data.error);
+        fetch("{% url 'tienda:actualizar_cantidad' %}", {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": getCookie('csrftoken'),
+            "X-Requested-With": "XMLHttpRequest",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ producto_id: productoId, accion: accion })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.error) return alert(data.error);
 
-        // Actualiza valores en pantalla
-        document.getElementById(`cantidad-${productoId}`).textContent = data.cantidad;
-        document.getElementById(`subtotal-${productoId}`).textContent = data.subtotal.toFixed(2);
-        document.getElementById("total").textContent = data.total.toFixed(2);
-      })
-      .catch(err => console.error("Error:", err));
+            document.getElementById(`cantidad-${productoId}`).textContent = data.cantidad;
+            document.getElementById(`subtotal-${productoId}`).textContent = data.subtotal.toFixed(2);
+            document.getElementById("total").textContent = data.total.toFixed(2);
+
+            // Actualizar también el contador del navbar si existe
+            const navbarCounter = document.getElementById('contador-carrito');
+            if (navbarCounter) navbarCounter.textContent = data.total_items;
+          })
+          .catch(err => console.error("Error:", err));
+      });
     });
   });
-});
 </script>
 {% endblock %}

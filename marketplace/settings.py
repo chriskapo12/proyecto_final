@@ -27,7 +27,21 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-m#!_fgkm5k8h8q8k+mj9^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+import os
+
+ALLOWED_HOSTS = [
+    'marketplace-django-z29l.onrender.com',
+    'localhost',
+    '127.0.0.1',
+]
+CSRF_TRUSTED_ORIGINS = [
+    'https://marketplace-django-z29l.onrender.com'
+]
+
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
 
 
 # Application definition
@@ -192,6 +206,6 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 MERCADOPAGO_ACCESS_TOKEN = 'APP_USR-6648621459860687-111112-6525bfe39eb274aa4986f608cece6d9a-2981232220'
 
 # URL de retorno después del pago
-MERCADOPAGO_SUCCESS_URL = 'http://127.0.0.1:8000/pago-exitoso/'
-MERCADOPAGO_FAILURE_URL = 'http://127.0.0.1:8000/pago-fallido/'
-MERCADOPAGO_PENDING_URL = 'http://127.0.0.1:8000/pago-pendiente/'
+MERCADOPAGO_SUCCESS_URL = 'https://marketplace-django-z29l.onrender.com/pago-exitoso/'
+MERCADOPAGO_FAILURE_URL = 'https://marketplace-django-z29l.onrender.com/pago-fallido/'
+MERCADOPAGO_PENDING_URL = 'https://marketplace-django-z29l.onrender.com/pago-pendiente/'

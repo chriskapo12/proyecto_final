@@ -1,118 +1,62 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Iniciar sesión</title>
- <!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Iniciar sesión | MiniMarket</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      background: linear-gradient(135deg, #6366f1, #4f46e5);
-      height: 100vh;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+{% extends 'tienda/base.html' %}
 
-    .login-card {
-      background: white;
-      width: 360px;
-      border-radius: 14px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-      padding: 35px 30px;
-      text-align: center;
-      animation: fadeIn 0.4s ease;
-    }
+{% block title %}Iniciar Sesión - Bebidas Oeste{% endblock %}
 
-    .login-card h2 {
-      color: #333;
-      margin-bottom: 25px;
-      font-size: 22px;
-    }
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 70vh;">
+  <div class="col-md-6 col-lg-4">
+    <div class="card border-0 shadow-lg">
+      <div class="card-body p-5">
+        <div class="text-center mb-4">
+          <i class="bi bi-person-circle display-1 text-success"></i>
+          <h2 class="fw-bold mt-3">¡Bienvenido!</h2>
+          <p class="text-muted">Ingresá a tu cuenta para continuar</p>
+        </div>
 
-    input {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: 15px;
-      transition: 0.2s;
-    }
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="username" class="form-label fw-bold">Usuario</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0"><i class="bi bi-person"></i></span>
+              <input type="text" name="username" class="form-control border-start-0 ps-0" id="username" required
+                placeholder="Tu nombre de usuario">
+            </div>
+          </div>
 
-    input:focus {
-      border-color: #6366f1;
-      outline: none;
-      box-shadow: 0 0 3px #6366f1;
-    }
+          <div class="mb-4">
+            <label for="password" class="form-label fw-bold">Contraseña</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock"></i></span>
+              <input type="password" name="password" class="form-control border-start-0 ps-0" id="password" required
+                placeholder="••••••••">
+            </div>
+          </div>
 
-    button {
-      width: 100%;
-      padding: 12px;
-      background: #4f46e5;
-      color: white;
-      font-weight: 600;
-      border: none;
-      border-radius: 8px;
-      margin-top: 10px;
-      cursor: pointer;
-      font-size: 15px;
-      transition: 0.3s;
-    }
+          <div class="d-grid mb-3">
+            <button type="submit" class="btn btn-success btn-lg fw-bold shadow-sm">
+              Iniciar Sesión
+            </button>
+          </div>
+        </form>
 
-    button:hover {
-      background: #3730a3;
-    }
+        <div class="text-center mt-4">
+          <p class="mb-0 text-muted">¿No tenés cuenta?</p>
+          <a href="{% url 'tienda:register' %}" class="text-success fw-bold text-decoration-none">Registrate acá</a>
+        </div>
 
-    .extra {
-      margin-top: 18px;
-      font-size: 14px;
-    }
+        <hr class="my-4">
 
-    .extra a {
-      color: #4f46e5;
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    .extra a:hover {
-      text-decoration: underline;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
-</head>
-<body>
-  <div class="login-card">
-    <h2>Iniciar sesión</h2>
-    <form method="POST">
-    {% csrf_token %}
-    <input type="text" name="username" placeholder="Usuario o correo" required>
-    <input type="password" name="password" placeholder="Contraseña" required>
-    <button type="submit">Entrar</button>
-</form>
-    <div style="margin-top:20px; border-top:1px solid #ddd; padding-top:20px;">
-      <p style="color:#666; font-size:14px; margin-bottom:12px;">O inicia sesión con:</p>
-      <a href="/accounts/github/login/" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:10px; border-radius:8px; background:#222; color:#fff; text-decoration:none; font-weight:600; margin-bottom:8px; transition:0.3s;">
-        ⭐ GitHub
-      </a>
-      <a href="/accounts/google/login/" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:10px; border-radius:8px; background:#ea4335; color:#fff; text-decoration:none; font-weight:600; transition:0.3s;">
-        🔍 Google
-      </a>
-    </div>
-    <div class="extra">
-      <p>¿No tenés cuenta? <a href="{% url 'tienda:register' %}">Crear una</a></p>
+        <div class="d-grid gap-2">
+          <a href="{% url 'google_login' %}" class="btn btn-outline-dark">
+            <i class="bi bi-google me-2"></i> Continuar con Google
+          </a>
+          <a href="{% url 'github_login' %}" class="btn btn-outline-dark">
+            <i class="bi bi-github me-2"></i> Continuar con GitHub
+          </a>
+        </div>
+      </div>
     </div>
   </div>
-</body>
-</html>
+</div>
+{% endblock %}

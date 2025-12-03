@@ -1,119 +1,97 @@
 {% extends 'tienda/base.html' %}
 {% load static %}
 
-<style>
-    /* Dark mode para detalle del producto */
-    body.dark-mode .producto-detalle {
-        background: #0f1724 !important;
-        color: #ffffff !important;
-    }
-
-    body.dark-mode .producto-detalle h1,
-    body.dark-mode .producto-detalle h3 {
-        color: #ffffff !important;
-    }
-
-    body.dark-mode .producto-detalle p {
-        color: #e5e7eb !important;
-    }
-
-    body.dark-mode .btn-chat-vendedor:hover,
-    body.dark-mode .btn-agregar:hover {
-        opacity: 0.9;
-    }
-
-    /* Responsive: botones en línea */
-    @media (max-width: 768px) {
-        .buttons-container {
-            flex-direction: column !important;
-        }
-
-        .buttons-container button,
-        .buttons-container a {
-            flex: unset !important;
-            width: 100% !important;
-        }
-    }
-</style>
+{% block title %}{{ producto.nombre }} - Bebidas Oeste{% endblock %}
 
 {% block content %}
-<div class="producto-detalle"
-    style="max-width: 1000px; margin: 40px auto; padding: 20px; display: flex; gap: 40px; background: white; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-    <!-- Imagen del producto -->
-    <div style="flex: 1; display:flex; align-items:center; justify-content:center;">
-        {% if producto.imagen %}
-        <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}"
-            style="width: 100%; height: auto; max-height: 600px; object-fit: contain; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display:block; margin:auto;">
-        {% else %}
-        <img src="{% static 'img/no-image.png' %}" alt="Sin imagen"
-            style="width: 100%; height: auto; max-height: 600px; object-fit: contain; border-radius: 10px; display:block; margin:auto;">
-        {% endif %}
-    </div>
+<div class="row justify-content-center py-4">
+    <div class="col-lg-10">
+        <div class="card border-0 shadow-lg overflow-hidden">
+            <div class="row g-0">
+                <!-- Imagen del producto -->
+                <div class="col-md-6 bg-light d-flex align-items-center justify-content-center p-4">
+                    {% if producto.imagen %}
+                    <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="img-fluid rounded shadow-sm"
+                        style="max-height: 500px; object-fit: contain;">
+                    {% else %}
+                    <div class="text-center text-muted">
+                        <i class="bi bi-card-image display-1 opacity-25"></i>
+                        <p class="mt-2">Sin imagen disponible</p>
+                    </div>
+                    {% endif %}
+                </div>
 
-    <!-- Información del producto -->
-    <div style="flex: 1; display: flex; flex-direction: column;">
-        <h1 style="margin: 0 0 15px 0; color: #2d3748; font-size: 2.5em;">{{ producto.nombre }}</h1>
+                <!-- Información del producto -->
+                <div class="col-md-6">
+                    <div class="card-body p-4 p-lg-5 d-flex flex-column h-100">
+                        <div class="mb-2">
+                            <span class="badge bg-info bg-opacity-10 text-info rounded-pill px-3 py-2">{{
+                                producto.get_categoria_display }}</span>
+                        </div>
 
-        <div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-            <p style="font-size: 2em; color: #2f855a; margin: 0;">${{ producto.precio }}</p>
-        </div>
+                        <h1 class="display-5 fw-bold text-dark mb-3">{{ producto.nombre }}</h1>
 
-        <div style="margin-bottom: 30px;">
-            <h3 style="color: #4a5568; margin-bottom: 10px;">Descripción:</h3>
-            <p style="color: #4a5568; line-height: 1.6; font-size: 1.1em;">
-                {{ producto.descripcion|default:"Sin descripción disponible" }}
-            </p>
-        </div>
+                        <div class="mb-4">
+                            <h2 class="text-success fw-bold display-6">${{ producto.precio }}</h2>
+                        </div>
 
-        <div style="margin-top: auto; display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch;"
-            class="buttons-container">
-            <!-- Botón de agregar al carrito -->
-            <button class="btn-agregar" data-id="{{ producto.id }}"
-                style="flex: 1 1 calc(50% - 5px); max-width: calc(50% - 5px); background: #2f855a; color: white; border: none; 
-                           padding: 12px 20px; border-radius: 10px; font-size: 1.05em; 
-                           cursor: pointer; transition: all 0.3s ease; display: flex; 
-                           align-items: center; justify-content: center; gap: 8px; height: 54px; white-space: nowrap; line-height: 1;">
-                <span style="font-size: 1.3em;">🛒</span>
-                <span>Agregar al carrito</span>
-            </button>
+                        <div class="mb-4 flex-grow-1">
+                            <h5 class="fw-bold text-dark mb-2">Descripción</h5>
+                            <p class="text-muted lead fs-6">
+                                {% if producto.descripcion %}
+                                {{ producto.descripcion }}
+                                {% else %}
+                                Sin descripción disponible
+                                {% endif %}
+                            </p>
+                        </div>
 
-            {% if user.is_authenticated and user != producto.usuario %}
-            <!-- Botón para chatear con el vendedor -->
-            <button class="btn-chat-vendedor" data-vendedor-id="{{ producto.usuario.id }}"
-                data-vendedor-nombre="{{ producto.usuario.username }}"
-                style="flex: 1 1 calc(50% - 5px); max-width: calc(50% - 5px); background: #3182ce; color: white; border: none; 
-                           padding: 12px 20px; border-radius: 10px; font-size: 1.05em; 
-                           cursor: pointer; transition: all 0.3s ease; display: flex; 
-                           align-items: center; justify-content: center; gap: 8px; height: 54px; white-space: nowrap; line-height: 1;">
-                <span style="font-size: 1.3em;">💬</span>
-                <span>Chatear con vendedor</span>
-            </button>
-            {% elif not user.is_authenticated %}
-            <!-- Botón de login para chatear -->
-            <a href="{% url 'tienda:login' %}" style="flex: 1 1 calc(50% - 5px); max-width: calc(50% - 5px); background: #3182ce; color: white; border: none; 
-                      padding: 12px 20px; border-radius: 10px; font-size: 1.05em; 
-                      cursor: pointer; transition: all 0.3s ease; display: flex; 
-                      align-items: center; justify-content: center; gap: 8px;
-                      text-decoration: none; height: 54px; white-space: nowrap; line-height: 1;">
-                <span style="font-size: 1.3em;">💬</span>
-                <span>Inicia sesión para chatear</span>
-            </a>
-            {% endif %}
+                        <div class="d-flex flex-column gap-3 mt-auto">
+                            <!-- Botón de agregar al carrito -->
+                            <button class="btn btn-success btn-lg w-100 py-3 fw-bold shadow-sm btn-agregar"
+                                data-id="{{ producto.id }}">
+                                <i class="bi bi-cart-plus me-2"></i> Agregar al carrito
+                            </button>
 
-            {% if user.is_authenticated and producto.usuario == user %}
-            <form method="post" action="{% url 'tienda:eliminar_producto' producto.id %}"
-                style="flex: 1 1 100%; width: 100%;">
-                {% csrf_token %}
-                <button type="submit"
-                    style="width: 100%; background: #e53e3e; color: white; border: none; 
-                               padding: 12px 30px; border-radius: 10px; font-size: 1.05em; 
-                               cursor: pointer; transition: all 0.3s ease; display: flex; 
-                               align-items: center; justify-content: center; gap: 10px; height: 54px; white-space: nowrap; line-height: 1;">
-                    <span style="font-size: 1.3em;">🗑</span>
-                    <span>Eliminar producto</span>
-                </button>
-            </form>
-            {% endif %}
+                            <div class="row g-2">
+                                {% if user.is_authenticated %}
+                                {% if user != producto.usuario %}
+                                <div class="col">
+                                    <button class="btn btn-outline-primary w-100 py-2 btn-chat-vendedor"
+                                        data-vendedor-id="{{ producto.usuario.id }}"
+                                        data-vendedor-nombre="{{ producto.usuario.username }}">
+                                        <i class="bi bi-chat-dots me-2"></i> Chatear con vendedor
+                                    </button>
+                                </div>
+                                <div class="col">
+                                    <a href="{% url 'tienda:ver_perfil_usuario' producto.usuario.id %}"
+                                        class="btn btn-outline-secondary w-100 py-2">
+                                        <i class="bi bi-person me-2"></i> Ver perfil
+                                    </a>
+                                </div>
+                                {% else %}
+                                <div class="col-12">
+                                    <form method="post" action="{% url 'tienda:eliminar_producto' producto.id %}"
+                                        onsubmit="return confirm('¿Estás seguro de eliminar este producto?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-danger w-100 py-2">
+                                            <i class="bi bi-trash me-2"></i> Eliminar producto
+                                        </button>
+                                    </form>
+                                </div>
+                                {% endif %}
+                                {% else %}
+                                <div class="col-12">
+                                    <a href="{% url 'tienda:login' %}" class="btn btn-outline-primary w-100 py-2">
+                                        <i class="bi bi-box-arrow-in-right me-2"></i> Inicia sesión para contactar
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -126,6 +104,7 @@
         if (boton) {
             boton.addEventListener("click", () => {
                 const productoId = boton.dataset.id;
+                const originalContent = boton.innerHTML;
 
                 fetch(`/carrito/agregar/${productoId}/`, {
                     method: "GET",
@@ -137,12 +116,14 @@
                             const contador = document.getElementById("contador-carrito");
                             if (contador) contador.textContent = data.total_items;
 
-                            boton.innerHTML = '<span style="font-size: 1.3em;">✅</span> ¡Agregado al carrito!';
-                            boton.style.background = "#2b6cb0";
+                            boton.classList.remove('btn-success');
+                            boton.classList.add('btn-dark');
+                            boton.innerHTML = '<i class="bi bi-check-lg me-2"></i> ¡Agregado!';
 
                             setTimeout(() => {
-                                boton.innerHTML = '<span style="font-size: 1.3em;">🛒</span> <span>Agregar al carrito</span>';
-                                boton.style.background = "#2f855a";
+                                boton.classList.remove('btn-dark');
+                                boton.classList.add('btn-success');
+                                boton.innerHTML = originalContent;
                             }, 1500);
                         } else {
                             alert("No se pudo agregar al carrito");
@@ -159,18 +140,28 @@
                 const vendedorId = btnChat.dataset.vendedorId;
                 const vendedorNombre = btnChat.dataset.vendedorNombre;
 
-                // Abre el chat panel desde base.html
                 const chatBtn = document.getElementById('abrir-chat');
                 if (chatBtn) {
                     chatBtn.click();
-
-                    // Espera a que el panel se abra y luego abre la conversación
                     setTimeout(() => {
-                        abrirConversacion(vendedorId, vendedorNombre);
+                        if (window.abrirConversacion) {
+                            window.abrirConversacion(parseInt(vendedorId), vendedorNombre);
+                        }
                     }, 500);
                 }
             });
         }
     });
 </script>
+
+<style>
+    /* Dark Mode Adjustments */
+    [data-bs-theme="dark"] .bg-light {
+        background-color: #2c3034 !important;
+    }
+
+    [data-bs-theme="dark"] .text-dark {
+        color: #f8f9fa !important;
+    }
+</style>
 {% endblock %}
