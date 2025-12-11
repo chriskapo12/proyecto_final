@@ -197,10 +197,19 @@ SOCIALACCOUNT_PROVIDERS = {
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'optional'
 SOCIALACCOUNT_EMAIL_REQUIRED = False
-ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter'
+ACCOUNT_ADAPTER = 'marketplace.social_adapter.MyAccountAdapter'
 
 # Redirigir al home después del login social
 SOCIALACCOUNT_LOGIN_ON_GET = True
+
+# Suprimir mensajes de django-allauth
+from django.contrib.messages import constants as messages_constants
+MESSAGE_TAGS = {
+    messages_constants.SUCCESS: '',
+}
+# Desactivar mensajes de allauth
+ACCOUNT_SESSION_REMEMBER = True
+ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False
 
 # ==================== CONFIGURACIÓN DE MERCADO PAGO ====================
 MERCADOPAGO_ACCESS_TOKEN = 'APP_USR-6648621459860687-111112-6525bfe39eb274aa4986f608cece6d9a-2981232220'

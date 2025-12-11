@@ -7,8 +7,9 @@ from django.http import JsonResponse
 import json
 import mercadopago
 from django.conf import settings
+from django.db.models import Avg, Count, Q
 
-from .models import Producto, Carrito, CarritoItem
+from .models import Producto, Carrito, CarritoItem, Favorito, Resena, Pedido, ItemPedido
 from .forms import ProductoForm
 from django.core.paginator import Paginator, EmptyPage
 
@@ -24,6 +25,18 @@ def home(request):
     productos_qs = Producto.objects.all().order_by('-id')
     if categoria in dict(categorias):
         productos_qs = productos_qs.filter(categoria=categoria)
+    
+    # Agregar información de favoritos si el usuario está autenticado
+    if request.user.is_authenticated:
+        productos_qs = productos_qs.annotate(
+            es_favorito=Count('favoritos', filter=Q(favoritos__usuario=request.user)),
+            promedio_calificacion=Avg('resenas__calificacion')
+        )
+    else:
+        productos_qs = productos_qs.annotate(
+            promedio_calificacion=Avg('resenas__calificacion')
+        )
+    
     ultimos_productos = productos_qs[:8]
     return render(request, 'tienda/home.html', {
         'ultimos_productos': ultimos_productos,
@@ -71,29 +84,103 @@ def logout_view(request):
     logout(request)
     return redirect('tienda:home')
 
-# 🛍 Lista de productos
+# 🛍 Lista de productos con búsqueda avanzada
 def productos_view(request):
-    productos = Producto.objects.all().order_by('-id')  # Ordenamos por más recientes primero
+    productos = Producto.objects.all()
     
     # Búsqueda por nombre o descripción
     buscar = request.GET.get('buscar', '').strip()
     if buscar:
-        from django.db.models import Q
         productos = productos.filter(
             Q(nombre__icontains=buscar) | 
             Q(descripcion__icontains=buscar) |
             Q(categoria__icontains=buscar)
         )
     
+    # Filtro por categoría
+    categoria = request.GET.get('categoria', '').strip()
+    if categoria:
+        productos = productos.filter(categoria=categoria)
+    
+    # Filtro por rango de precio
+    precio_min = request.GET.get('precio_min', '').strip()
+    precio_max = request.GET.get('precio_max', '').strip()
+    if precio_min:
+        try:
+            productos = productos.filter(precio__gte=float(precio_min))
+        except ValueError:
+            pass
+    if precio_max:
+        try:
+            productos = productos.filter(precio__lte=float(precio_max))
+        except ValueError:
+            pass
+    
+    # Ordenamiento
+    orden = request.GET.get('orden', '-id')
+    if orden == 'precio_asc':
+        productos = productos.order_by('precio')
+    elif orden == 'precio_desc':
+        productos = productos.order_by('-precio')
+    elif orden == 'nombre':
+        productos = productos.order_by('nombre')
+    elif orden == 'antiguos':
+        productos = productos.order_by('id')
+    else:  # 'recientes' o por defecto
+        productos = productos.order_by('-id')
+    
+    # Anotar productos con favoritos y calificación promedio
+    if request.user.is_authenticated:
+        productos = productos.annotate(
+            es_favorito=Count('favoritos', filter=Q(favoritos__usuario=request.user)),
+            promedio_calificacion=Avg('resenas__calificacion')
+        )
+    else:
+        productos = productos.annotate(
+            promedio_calificacion=Avg('resenas__calificacion')
+        )
+    
+    categorias = [
+        ('licor', 'Licor'),
+        ('energizante', 'Energizante'),
+        ('cerveza', 'Cerveza'),
+        ('vino', 'Vino'),
+    ]
+    
     return render(request, 'tienda/productos.html', {
         'productos': productos,
         'buscar': buscar,
+        'categoria': categoria,
+        'precio_min': precio_min,
+        'precio_max': precio_max,
+        'orden': orden,
+        'categorias': categorias,
     })
 
 # 🔍 Detalle de producto
 def detalle_producto_view(request, producto_id):
     producto = get_object_or_404(Producto, id=producto_id)
-    return render(request, 'tienda/detalle_producto.html', {'producto': producto})
+    
+    # Obtener reseñas del producto
+    resenas = producto.resenas.all().select_related('usuario')
+    promedio_calificacion = resenas.aggregate(Avg('calificacion'))['calificacion__avg']
+    total_resenas = resenas.count()
+    
+    # Verificar si el usuario ya reseñó este producto
+    resena_usuario = None
+    es_favorito = False
+    if request.user.is_authenticated:
+        resena_usuario = resenas.filter(usuario=request.user).first()
+        es_favorito = Favorito.objects.filter(usuario=request.user, producto=producto).exists()
+    
+    return render(request, 'tienda/detalle_producto.html', {
+        'producto': producto,
+        'resenas': resenas,
+        'promedio_calificacion': promedio_calificacion,
+        'total_resenas': total_resenas,
+        'resena_usuario': resena_usuario,
+        'es_favorito': es_favorito,
+    })
 
 # ➕ Agregar producto (solo usuarios registrados)
 @login_required
@@ -108,6 +195,27 @@ def agregar_producto_view(request):
     else:
         form = ProductoForm()
     return render(request, 'tienda/agregar_producto.html', {'form': form})
+
+# ✏️ Editar producto (solo dueño)
+@login_required
+def editar_producto_view(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id)
+    
+    # Verificar que el usuario sea el dueño
+    if producto.usuario != request.user:
+        messages.error(request, 'Solo podés editar tus propios productos.')
+        return redirect('tienda:detalle_producto', producto_id=producto_id)
+    
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, request.FILES, instance=producto)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Producto actualizado exitosamente.')
+            return redirect('tienda:detalle_producto', producto_id=producto_id)
+    else:
+        form = ProductoForm(instance=producto)
+    
+    return render(request, 'tienda/editar_producto.html', {'form': form, 'producto': producto})
 
 # ❌ Eliminar producto (solo dueño)
 @login_required
@@ -294,11 +402,34 @@ def procesar_pago(request):
         else:
             print("[DEBUG] Procesando pago con tarjeta local...")
             # Método de pago simulado (tarjeta de crédito local)
+            
+            # Crear pedido
+            pedido = Pedido.objects.create(
+                usuario=request.user,
+                total=total,
+                estado='procesando',
+                metodo_pago='tarjeta_local',
+                nombre_completo=nombre,
+                email=email,
+                direccion=request.POST.get('direccion', ''),
+                telefono=request.POST.get('telefono', ''),
+            )
+            
+            # Crear items del pedido
+            for item in items:
+                ItemPedido.objects.create(
+                    pedido=pedido,
+                    producto=item.producto,
+                    nombre_producto=item.producto.nombre,
+                    precio_unitario=item.producto.precio,
+                    cantidad=item.cantidad,
+                )
+            
             # Limpiamos el carrito
             carrito.items.all().delete()
 
             messages.success(request, '¡Pago procesado exitosamente! Gracias por tu compra.')
-            return redirect('tienda:productos')
+            return redirect('tienda:detalle_pedido', pedido_id=pedido.id)
 
     return render(request, 'tienda/pago.html', {
         'items': items,
@@ -309,9 +440,44 @@ def procesar_pago(request):
 # ✅ Pago exitoso (Mercado Pago)
 @login_required
 def pago_exitoso(request):
+    """Callback de Mercado Pago cuando el pago es exitoso"""
     carrito = Carrito.objects.filter(usuario=request.user).first()
-    if carrito:
+    
+    if carrito and carrito.items.exists():
+        # Calcular total
+        items = list(carrito.items.select_related('producto').all())
+        total = sum(item.cantidad * item.producto.precio for item in items)
+        
+        # Obtener parámetros de Mercado Pago
+        payment_id = request.GET.get('payment_id')
+        preference_id = request.GET.get('preference_id')
+        
+        # Crear pedido
+        pedido = Pedido.objects.create(
+            usuario=request.user,
+            total=total,
+            estado='procesando',
+            metodo_pago='mercadopago',
+            nombre_completo=request.user.get_full_name() or request.user.username,
+            email=request.user.email,
+            payment_id=payment_id,
+            preference_id=preference_id,
+        )
+        
+        # Crear items del pedido
+        for item in items:
+            ItemPedido.objects.create(
+                pedido=pedido,
+                producto=item.producto,
+                nombre_producto=item.producto.nombre,
+                precio_unitario=item.producto.precio,
+                cantidad=item.cantidad,
+            )
+        
+        # Limpiar carrito
         carrito.items.all().delete()
+        
+        return render(request, 'tienda/pago_exitoso.html', {'pedido': pedido})
     
     return render(request, 'tienda/pago_exitoso.html')
 
@@ -575,4 +741,95 @@ def editar_perfil(request):
     
     return render(request, 'tienda/editar_perfil.html', {
         'perfil': perfil,
+    })
+
+
+# ========== FUNCIONALIDADES CORE ==========
+
+# ⭐ Sistema de Favoritos
+@login_required
+def toggle_favorito(request, producto_id):
+    """Agregar o quitar producto de favoritos (AJAX)"""
+    from .models import Favorito
+    producto = get_object_or_404(Producto, id=producto_id)
+    favorito, created = Favorito.objects.get_or_create(usuario=request.user, producto=producto)
+    
+    if not created:
+        favorito.delete()
+        return JsonResponse({'status': 'removed', 'message': 'Producto quitado de favoritos'})
+    
+    return JsonResponse({'status': 'added', 'message': 'Producto agregado a favoritos'})
+
+
+@login_required
+def mis_favoritos(request):
+    """Lista de productos favoritos del usuario"""
+    from .models import Favorito
+    favoritos = Favorito.objects.filter(usuario=request.user).select_related('producto')
+    return render(request, 'tienda/favoritos.html', {
+        'favoritos': favoritos,
+    })
+
+
+# 📝 Sistema de Reseñas
+@login_required
+def agregar_resena(request, producto_id):
+    """Agregar o editar reseña de un producto"""
+    from .models import Resena
+    producto = get_object_or_404(Producto, id=producto_id)
+    
+    if request.method == 'POST':
+        calificacion = request.POST.get('calificacion')
+        comentario = request.POST.get('comentario', '')
+        
+        if not calificacion or int(calificacion) < 1 or int(calificacion) > 5:
+            messages.error(request, 'Debes seleccionar una calificación válida (1-5 estrellas).')
+            return redirect('tienda:detalle_producto', producto_id=producto_id)
+        
+        # Actualizar si ya existe, crear si no
+        resena, created = Resena.objects.update_or_create(
+            producto=producto,
+            usuario=request.user,
+            defaults={'calificacion': int(calificacion), 'comentario': comentario}
+        )
+        
+        if created:
+            messages.success(request, '¡Gracias por tu reseña!')
+        else:
+            messages.success(request, '¡Tu reseña ha sido actualizada!')
+        
+        return redirect('tienda:detalle_producto', producto_id=producto_id)
+    
+    return redirect('tienda:detalle_producto', producto_id=producto_id)
+
+
+@login_required
+def eliminar_resena(request, resena_id):
+    """Eliminar una reseña propia"""
+    from .models import Resena
+    resena = get_object_or_404(Resena, id=resena_id, usuario=request.user)
+    producto_id = resena.producto.id
+    resena.delete()
+    messages.success(request, 'Tu reseña ha sido eliminada.')
+    return redirect('tienda:detalle_producto', producto_id=producto_id)
+
+
+# 📦 Historial de Pedidos
+@login_required
+def mis_pedidos(request):
+    """Lista de pedidos del usuario"""
+    from .models import Pedido
+    pedidos = Pedido.objects.filter(usuario=request.user).prefetch_related('items')
+    return render(request, 'tienda/pedidos.html', {
+        'pedidos': pedidos,
+    })
+
+
+@login_required
+def detalle_pedido(request, pedido_id):
+    """Detalle de un pedido específico"""
+    from .models import Pedido
+    pedido = get_object_or_404(Pedido, id=pedido_id, usuario=request.user)
+    return render(request, 'tienda/detalle_pedido.html', {
+        'pedido': pedido,
     })

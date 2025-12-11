@@ -16,29 +16,116 @@
   {% endif %}
 </div>
 
+<!-- Filtros avanzados -->
+<div class="card mb-4 shadow-sm">
+  <div class="card-body">
+    <form method="get" action="{% url 'tienda:productos' %}" class="row g-3">
+      <!-- Búsqueda -->
+      <div class="col-md-4">
+        <input type="text" class="form-control" name="buscar" placeholder="Buscar productos..." value="{{ buscar }}">
+      </div>
+
+      <!-- Categoría -->
+      <div class="col-md-3">
+        <select class="form-select" name="categoria">
+          <option value="">Todas las categorías</option>
+          {% for value, label in categorias %}
+          <option value="{{ value }}" {% if categoria == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Precio mínimo -->
+      <div class="col-md-2">
+        <input type="number" class="form-control" name="precio_min" placeholder="Precio mín." value="{{ precio_min }}" step="0.01">
+      </div>
+
+      <!-- Precio máximo -->
+      <div class="col-md-2">
+        <input type="number" class="form-control" name="precio_max" placeholder="Precio máx." value="{{ precio_max }}" step="0.01">
+      </div>
+
+      <!-- Ordenar -->
+      <div class="col-md-3">
+        <select class="form-select" name="orden">
+          <option value="recientes" {% if orden == 'recientes' or not orden %}selected{% endif %}>Más recientes</option>
+          <option value="antiguos" {% if orden == 'antiguos' %}selected{% endif %}>Más antiguos</option>
+          <option value="precio_asc" {% if orden == 'precio_asc' %}selected{% endif %}>Menor precio</option>
+          <option value="precio_desc" {% if orden == 'precio_desc' %}selected{% endif %}>Mayor precio</option>
+          <option value="nombre" {% if orden == 'nombre' %}selected{% endif %}>Nombre A-Z</option>
+        </select>
+      </div>
+
+      <!-- Botones -->
+      <div class="col-md-3">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-search"></i> Buscar
+        </button>
+      </div>
+      <div class="col-md-3">
+        <a href="{% url 'tienda:productos' %}" class="btn btn-outline-secondary w-100">
+          <i class="bi bi-x-circle"></i> Limpiar
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4">
   {% for producto in productos %}
   <div class="col">
     <div class="card h-100 border-0 shadow-sm hover-shadow transition-all">
       <!-- Imagen -->
-      <a href="{% url 'tienda:detalle_producto' producto.id %}" class="text-decoration-none">
-        <div class="card-img-top bg-light d-flex align-items-center justify-content-center p-3" style="height: 200px;">
-          {% if producto.imagen %}
-          <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="img-fluid"
-            style="max-height: 100%; object-fit: contain;">
+      <div class="position-relative">
+        <a href="{% url 'tienda:detalle_producto' producto.id %}" class="text-decoration-none">
+          <div class="card-img-top bg-light d-flex align-items-center justify-content-center p-3" style="height: 200px;">
+            {% if producto.imagen %}
+            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="img-fluid"
+              style="max-height: 100%; object-fit: contain;">
+            {% else %}
+            <i class="bi bi-card-image display-1 text-secondary opacity-25"></i>
+            {% endif %}
+          </div>
+        </a>
+        
+        <!-- Botón de favorito -->
+        {% if user.is_authenticated %}
+        <button class="btn btn-link position-absolute top-0 end-0 m-2 btn-favorito" 
+                data-producto-id="{{ producto.id }}"
+                style="background: rgba(255,255,255,0.9); border-radius: 50%; width: 40px; height: 40px; padding: 0;">
+          {% if producto.es_favorito %}
+            <i class="bi bi-heart-fill text-danger fs-5"></i>
           {% else %}
-          <i class="bi bi-card-image display-1 text-secondary opacity-25"></i>
+            <i class="bi bi-heart text-danger fs-5"></i>
           {% endif %}
-        </div>
-      </a>
+        </button>
+        {% endif %}
+      </div>
 
       <!-- Cuerpo -->
       <div class="card-body d-flex flex-column">
         <a href="{% url 'tienda:detalle_producto' producto.id %}" class="text-decoration-none text-dark">
           <h5 class="card-title fw-bold mb-2 text-truncate">{{ producto.nombre }}</h5>
         </a>
-        <p class="card-text text-muted small flex-grow-1">{{ producto.descripcion|default:"Sin
-          descripción"|truncatechars:80 }}</p>
+        
+        <!-- Calificación -->
+        {% if producto.promedio_calificacion %}
+        <div class="mb-2">
+          {% with promedio=producto.promedio_calificacion %}
+          {% for i in "12345" %}
+            {% if forloop.counter <= promedio %}
+              <i class="bi bi-star-fill text-warning small"></i>
+            {% elif forloop.counter|add:"-1" < promedio %}
+              <i class="bi bi-star-half text-warning small"></i>
+            {% else %}
+              <i class="bi bi-star text-warning small"></i>
+            {% endif %}
+          {% endfor %}
+          {% endwith %}
+        </div>
+        {% endif %}
+        
+        <p class="card-text text-muted small flex-grow-1">{{ producto.descripcion|default:"Sin descripción"|truncatechars:80 }}</p>
         <h5 class="text-success fw-bold mb-3">${{ producto.precio }}</h5>
 
         <!-- Botones -->
@@ -156,6 +243,35 @@
             }
           }, 500);
         }
+      });
+    });
+
+    // Lógica de favoritos
+    document.querySelectorAll('.btn-favorito').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const productoId = this.dataset.productoId;
+        const icon = this.querySelector('i');
+        
+        fetch(`/favoritos/toggle/${productoId}/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+          },
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'added') {
+            icon.classList.remove('bi-heart');
+            icon.classList.add('bi-heart-fill');
+          } else {
+            icon.classList.remove('bi-heart-fill');
+            icon.classList.add('bi-heart');
+          }
+        })
+        .catch(error => console.error('Error:', error));
       });
     });
   });

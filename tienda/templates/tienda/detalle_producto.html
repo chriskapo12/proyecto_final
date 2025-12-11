@@ -24,12 +24,42 @@
                 <!-- Información del producto -->
                 <div class="col-md-6">
                     <div class="card-body p-4 p-lg-5 d-flex flex-column h-100">
-                        <div class="mb-2">
-                            <span class="badge bg-info bg-opacity-10 text-info rounded-pill px-3 py-2">{{
-                                producto.get_categoria_display }}</span>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-info bg-opacity-10 text-info rounded-pill px-3 py-2">{{ producto.get_categoria_display }}</span>
+                            {% if user.is_authenticated %}
+                            <button class="btn btn-link text-decoration-none p-0 btn-favorito" data-producto-id="{{ producto.id }}">
+                                {% if es_favorito %}
+                                    <i class="bi bi-heart-fill text-danger fs-3"></i>
+                                {% else %}
+                                    <i class="bi bi-heart text-danger fs-3"></i>
+                                {% endif %}
+                            </button>
+                            {% endif %}
                         </div>
 
                         <h1 class="display-5 fw-bold text-dark mb-3">{{ producto.nombre }}</h1>
+
+                        <!-- Calificación -->
+                        {% if promedio_calificacion %}
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center">
+                                {% with promedio=promedio_calificacion %}
+                                <div class="me-2">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= promedio %}
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                        {% elif forloop.counter|add:"-1" < promedio %}
+                                            <i class="bi bi-star-half text-warning"></i>
+                                        {% else %}
+                                            <i class="bi bi-star text-warning"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                {% endwith %}
+                                <span class="text-muted">({{ total_resenas }} reseña{{ total_resenas|pluralize:",s" }})</span>
+                            </div>
+                        </div>
+                        {% endif %}
 
                         <div class="mb-4">
                             <h2 class="text-success fw-bold display-6">${{ producto.precio }}</h2>
@@ -70,12 +100,17 @@
                                     </a>
                                 </div>
                                 {% else %}
-                                <div class="col-12">
+                                <div class="col">
+                                    <a href="{% url 'tienda:editar_producto' producto.id %}" class="btn btn-outline-warning w-100 py-2">
+                                        <i class="bi bi-pencil-square me-2"></i> Editar
+                                    </a>
+                                </div>
+                                <div class="col">
                                     <form method="post" action="{% url 'tienda:eliminar_producto' producto.id %}"
                                         onsubmit="return confirm('¿Estás seguro de eliminar este producto?');">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-outline-danger w-100 py-2">
-                                            <i class="bi bi-trash me-2"></i> Eliminar producto
+                                            <i class="bi bi-trash me-2"></i> Eliminar
                                         </button>
                                     </form>
                                 </div>
@@ -93,8 +128,125 @@
                 </div>
             </div>
         </div>
+
+        <!-- Sección de Reseñas -->
+        <div class="col-lg-10 mt-4">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-white py-3">
+                    <h3 class="mb-0"><i class="bi bi-star"></i> Reseñas y Calificaciones</h3>
+                </div>
+                <div class="card-body p-4">
+                    {% if user.is_authenticated and user != producto.usuario %}
+                    <!-- Formulario para agregar/editar reseña -->
+                    <div class="mb-4 p-4 bg-light rounded">
+                        <h5 class="mb-3">
+                            {% if resena_usuario %}
+                                Editar tu reseña
+                            {% else %}
+                                Deja tu reseña
+                            {% endif %}
+                        </h5>
+                        <form method="post" action="{% url 'tienda:agregar_resena' producto.id %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Calificación</label>
+                                <div class="rating-input">
+                                    {% for i in "12345" %}
+                                    <input type="radio" name="calificacion" value="{{ i }}" id="star{{ i }}" 
+                                           {% if resena_usuario and resena_usuario.calificacion == forloop.counter %}checked{% endif %}>
+                                    <label for="star{{ i }}"><i class="bi bi-star-fill"></i></label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="comentario" class="form-label fw-bold">Comentario (opcional)</label>
+                                <textarea class="form-control" name="comentario" id="comentario" rows="3" maxlength="500" placeholder="Comparte tu experiencia con este producto...">{% if resena_usuario %}{{ resena_usuario.comentario }}{% endif %}</textarea>
+                                <small class="text-muted">Máximo 500 caracteres</small>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-send"></i> 
+                                    {% if resena_usuario %}Actualizar reseña{% else %}Publicar reseña{% endif %}
+                                </button>
+                                {% if resena_usuario %}
+                                <a href="{% url 'tienda:eliminar_resena' resena_usuario.id %}" 
+                                   class="btn btn-outline-danger"
+                                   onclick="return confirm('¿Eliminar tu reseña?')">
+                                    <i class="bi bi-trash"></i> Eliminar
+                                </a>
+                                {% endif %}
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    <!-- Lista de reseñas -->
+                    {% if resenas %}
+                    <div class="mt-4">
+                        {% for resena in resenas %}
+                        <div class="mb-4 pb-4 border-bottom">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <strong class="text-dark">{{ resena.usuario.username }}</strong>
+                                    <div class="mt-1">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= resena.calificacion %}
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                            {% else %}
+                                                <i class="bi bi-star text-warning"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <small class="text-muted">{{ resena.fecha_creacion|date:"d/m/Y" }}</small>
+                            </div>
+                            {% if resena.comentario %}
+                            <p class="text-muted mb-0">{{ resena.comentario }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-chat-quote" style="font-size: 3rem;"></i>
+                        <p class="mt-2">Aún no hay reseñas para este producto</p>
+                        {% if user.is_authenticated and user != producto.usuario %}
+                        <p class="mb-0">¡Sé el primero en dejar una reseña!</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+/* Sistema de calificación con estrellas */
+.rating-input {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 0.25rem;
+}
+
+.rating-input input {
+    display: none;
+}
+
+.rating-input label {
+    cursor: pointer;
+    font-size: 2rem;
+    color: #ddd;
+    transition: color 0.2s;
+}
+
+.rating-input label:hover,
+.rating-input label:hover ~ label,
+.rating-input input:checked ~ label {
+    color: #ffc107;
+}
+</style>
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
@@ -149,6 +301,35 @@
                         }
                     }, 500);
                 }
+            });
+        }
+
+        // Botón de favoritos
+        const btnFavorito = document.querySelector(".btn-favorito");
+        if (btnFavorito) {
+            btnFavorito.addEventListener("click", function(e) {
+                e.preventDefault();
+                const productoId = this.dataset.productoId;
+                const icon = this.querySelector('i');
+                
+                fetch(`/favoritos/toggle/${productoId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'added') {
+                        icon.classList.remove('bi-heart');
+                        icon.classList.add('bi-heart-fill');
+                    } else {
+                        icon.classList.remove('bi-heart-fill');
+                        icon.classList.add('bi-heart');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
             });
         }
     });

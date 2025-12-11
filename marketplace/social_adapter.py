@@ -1,4 +1,5 @@
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+from allauth.account.adapter import DefaultAccountAdapter
 from django.contrib.auth import get_user_model
 
 class MySocialAccountAdapter(DefaultSocialAccountAdapter):
@@ -8,6 +9,11 @@ class MySocialAccountAdapter(DefaultSocialAccountAdapter):
     `sociallogin.connect(request, user)` para asociar la SocialAccount al usuario
     y evitar la pantalla de signup de allauth.
     """
+
+    def add_message(self, request, level, message_template, message_context=None, extra_tags=''):
+        """Sobrescribir para no mostrar mensajes de login exitoso"""
+        # No mostrar ningún mensaje
+        pass
 
     def pre_social_login(self, request, sociallogin):
         # Si el usuario ya está autenticado, no hacemos nada
@@ -48,3 +54,11 @@ class MySocialAccountAdapter(DefaultSocialAccountAdapter):
             # Si algo falla, no interrumpimos el flujo; dejamos que allauth maneje
             # el caso por defecto (mostrar el formulario de registro o error)
             pass
+
+
+class MyAccountAdapter(DefaultAccountAdapter):
+    """Adapter personalizado para suprimir mensajes de login"""
+    
+    def add_message(self, request, level, message_template, message_context=None, extra_tags=''):
+        """Sobrescribir para no mostrar mensajes"""
+        pass

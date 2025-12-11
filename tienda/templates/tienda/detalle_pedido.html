@@ -1,0 +1,147 @@
+{% extends "tienda/base.html" %}
+
+{% block title %}Detalle del Pedido #{{ pedido.id }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'tienda:mis_pedidos' %}" class="btn btn-outline-secondary mb-3">
+                <i class="bi bi-arrow-left"></i> Volver a mis pedidos
+            </a>
+            <h1 class="mb-0">Pedido #{{ pedido.id }}</h1>
+            <p class="text-muted">{{ pedido.fecha_pedido|date:"d 'de' F 'de' Y 'a las' H:i" }}</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Estado del pedido -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Estado del Pedido</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center py-3">
+                        {% if pedido.estado == 'pendiente' %}
+                            <i class="bi bi-clock-history text-warning" style="font-size: 3rem;"></i>
+                            <h4 class="mt-3">Pendiente</h4>
+                            <p class="text-muted">Tu pedido está en espera de procesamiento</p>
+                        {% elif pedido.estado == 'procesando' %}
+                            <i class="bi bi-gear text-info" style="font-size: 3rem;"></i>
+                            <h4 class="mt-3">Procesando</h4>
+                            <p class="text-muted">Estamos preparando tu pedido</p>
+                        {% elif pedido.estado == 'enviado' %}
+                            <i class="bi bi-truck text-primary" style="font-size: 3rem;"></i>
+                            <h4 class="mt-3">Enviado</h4>
+                            <p class="text-muted">Tu pedido está en camino</p>
+                        {% elif pedido.estado == 'entregado' %}
+                            <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                            <h4 class="mt-3">Entregado</h4>
+                            <p class="text-muted">Tu pedido ha sido entregado</p>
+                        {% elif pedido.estado == 'cancelado' %}
+                            <i class="bi bi-x-circle text-danger" style="font-size: 3rem;"></i>
+                            <h4 class="mt-3">Cancelado</h4>
+                            <p class="text-muted">Este pedido ha sido cancelado</p>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+
+                    <div class="mb-2">
+                        <small class="text-muted">Método de pago:</small>
+                        <p class="mb-0"><strong>{{ pedido.get_metodo_pago_display|default:"Mercado Pago" }}</strong></p>
+                    </div>
+
+                    {% if pedido.payment_id %}
+                    <div class="mb-2">
+                        <small class="text-muted">ID de Transacción:</small>
+                        <p class="mb-0"><code>{{ pedido.payment_id }}</code></p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Productos y total -->
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-box-seam"></i> Productos</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-end">Precio Unit.</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in pedido.items.all %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ item.nombre_producto }}</strong>
+                                        {% if item.producto %}
+                                        <br>
+                                        <small class="text-muted">
+                                            <a href="{% url 'tienda:detalle_producto' item.producto.id %}" class="text-decoration-none">
+                                                Ver producto
+                                            </a>
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">{{ item.cantidad }}</td>
+                                    <td class="text-end">${{ item.precio_unitario }}</td>
+                                    <td class="text-end"><strong>${{ item.subtotal }}</strong></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-light">
+                                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                    <td class="text-end"><h4 class="text-success mb-0">${{ pedido.total }}</h4></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información de envío -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-person"></i> Información de Contacto</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted">Nombre:</small>
+                            <p class="mb-0"><strong>{{ pedido.nombre_completo }}</strong></p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted">Email:</small>
+                            <p class="mb-0"><strong>{{ pedido.email }}</strong></p>
+                        </div>
+                        {% if pedido.telefono %}
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted">Teléfono:</small>
+                            <p class="mb-0"><strong>{{ pedido.telefono }}</strong></p>
+                        </div>
+                        {% endif %}
+                        {% if pedido.direccion %}
+                        <div class="col-12">
+                            <small class="text-muted">Dirección de envío:</small>
+                            <p class="mb-0"><strong>{{ pedido.direccion }}</strong></p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -84,3 +84,82 @@ class Mensaje(models.Model):
     def __str__(self):
         return f"{self.remitente.username} → {self.destinatario.username}: {self.contenido[:50]}"
 
+
+class Favorito(models.Model):
+    """Productos favoritos/guardados de cada usuario"""
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favoritos')
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='favoritos')
+    fecha_agregado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('usuario', 'producto')
+        ordering = ['-fecha_agregado']
+
+    def __str__(self):
+        return f"{self.usuario.username} - {self.producto.nombre}"
+
+
+class Resena(models.Model):
+    """Reseñas y valoraciones de productos"""
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='resenas')
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='resenas')
+    calificacion = models.IntegerField(choices=[(i, i) for i in range(1, 6)])  # 1-5 estrellas
+    comentario = models.TextField(blank=True, max_length=500)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_modificacion = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('producto', 'usuario')  # Un usuario solo puede reseñar una vez cada producto
+        ordering = ['-fecha_creacion']
+
+    def __str__(self):
+        return f"{self.usuario.username} - {self.producto.nombre} ({self.calificacion}★)"
+
+
+class Pedido(models.Model):
+    """Historial de pedidos de usuarios"""
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('procesando', 'Procesando'),
+        ('enviado', 'Enviado'),
+        ('entregado', 'Entregado'),
+        ('cancelado', 'Cancelado'),
+    ]
+
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='pedidos')
+    fecha_pedido = models.DateTimeField(auto_now_add=True)
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+    metodo_pago = models.CharField(max_length=50, default='mercadopago')
+    
+    # Datos de envío/contacto
+    nombre_completo = models.CharField(max_length=200)
+    email = models.EmailField()
+    direccion = models.TextField(blank=True)
+    telefono = models.CharField(max_length=20, blank=True)
+    
+    # ID de transacción de Mercado Pago
+    payment_id = models.CharField(max_length=200, blank=True, null=True)
+    preference_id = models.CharField(max_length=200, blank=True, null=True)
+
+    class Meta:
+        ordering = ['-fecha_pedido']
+
+    def __str__(self):
+        return f"Pedido #{self.id} - {self.usuario.username} - ${self.total}"
+
+
+class ItemPedido(models.Model):
+    """Items individuales de cada pedido"""
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='items')
+    producto = models.ForeignKey(Producto, on_delete=models.SET_NULL, null=True)
+    nombre_producto = models.CharField(max_length=200)  # Guardamos el nombre por si se elimina el producto
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    cantidad = models.PositiveIntegerField(default=1)
+
+    def subtotal(self):
+        return self.precio_unitario * self.cantidad
+
+    def __str__(self):
+        return f"{self.nombre_producto} x{self.cantidad}"
+

@@ -1,0 +1,129 @@
+{% extends "tienda/base.html" %}
+
+{% block title %}Mis Favoritos{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-0">
+                <i class="bi bi-heart-fill text-danger"></i> Mis Favoritos
+            </h1>
+            <p class="text-muted">{{ favoritos|length }} producto{{ favoritos|length|pluralize:",s" }} guardado{{ favoritos|length|pluralize:",s" }}</p>
+        </div>
+    </div>
+
+    {% if favoritos %}
+        <div class="row g-4">
+            {% for favorito in favoritos %}
+            <div class="col-md-4 col-lg-3">
+                <div class="card h-100 shadow-sm hover-lift">
+                    <div class="position-relative">
+                        {% if favorito.producto.imagen %}
+                            <img src="{{ favorito.producto.imagen.url }}" class="card-img-top" alt="{{ favorito.producto.nombre }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Botón favorito -->
+                        <button class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 btn-favorito" 
+                                data-producto-id="{{ favorito.producto.id }}"
+                                title="Quitar de favoritos">
+                            <i class="bi bi-heart-fill"></i>
+                        </button>
+                    </div>
+
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title mb-2">{{ favorito.producto.nombre }}</h5>
+                        <span class="badge bg-secondary mb-2 align-self-start">{{ favorito.producto.get_categoria_display }}</span>
+                        
+                        <p class="text-muted small mb-2">{{ favorito.producto.descripcion|default:"Sin descripción"|truncatechars:60 }}</p>
+                        
+                        <h4 class="text-success mb-3 mt-auto">${{ favorito.producto.precio }}</h4>
+                        
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'tienda:detalle_producto' favorito.producto.id %}" class="btn btn-primary">
+                                Ver detalles
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-heart" style="font-size: 5rem; color: #ccc;"></i>
+            <h3 class="mt-3">No tienes favoritos aún</h3>
+            <p class="text-muted">Explora nuestros productos y guarda tus favoritos</p>
+            <a href="{% url 'tienda:productos' %}" class="btn btn-primary mt-3">
+                Ver productos
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+}
+.btn-favorito {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.9;
+}
+.btn-favorito:hover {
+    opacity: 1;
+}
+</style>
+
+<script>
+// Manejar toggle de favoritos
+document.querySelectorAll('.btn-favorito').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const productoId = this.dataset.productoId;
+        
+        fetch(`/favoritos/toggle/${productoId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'removed') {
+                // Remover el card con animación
+                this.closest('.col-md-4').style.transition = 'opacity 0.3s';
+                this.closest('.col-md-4').style.opacity = '0';
+                setTimeout(() => {
+                    this.closest('.col-md-4').remove();
+                    
+                    // Si no quedan más favoritos, recargar la página
+                    if (document.querySelectorAll('.btn-favorito').length === 0) {
+                        location.reload();
+                    } else {
+                        // Actualizar contador
+                        const contador = document.querySelector('.text-muted');
+                        const cantidad = document.querySelectorAll('.btn-favorito').length;
+                        contador.textContent = `${cantidad} producto${cantidad !== 1 ? 's' : ''} guardado${cantidad !== 1 ? 's' : ''}`;
+                    }
+                }, 300);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+});
+</script>
+{% endblock %}

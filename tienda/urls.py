@@ -17,6 +17,7 @@ urlpatterns = [
   path('productos/api/', views.productos_api, name='productos_api'),
     path('productos/<int:producto_id>/', views.detalle_producto_view, name='detalle_producto'),
     path('agregar/', views.agregar_producto_view, name='agregar_producto'),
+    path('editar/<int:producto_id>/', views.editar_producto_view, name='editar_producto'),
     path('eliminar/<int:producto_id>/', views.eliminar_producto_view, name='eliminar_producto'),
     # Carrito
     path('carrito/', views.ver_carrito, name='ver_carrito'),
@@ -41,4 +42,16 @@ urlpatterns = [
     path('perfil/', views.mi_perfil, name='mi_perfil'),
     path('perfil/<int:usuario_id>/', views.ver_perfil_usuario, name='ver_perfil_usuario'),
     path('perfil/editar/', views.editar_perfil, name='editar_perfil'),
+    
+    # ⭐ Favoritos
+    path('favoritos/', views.mis_favoritos, name='mis_favoritos'),
+    path('favoritos/toggle/<int:producto_id>/', views.toggle_favorito, name='toggle_favorito'),
+    
+    # 📝 Reseñas
+    path('resenas/agregar/<int:producto_id>/', views.agregar_resena, name='agregar_resena'),
+    path('resenas/eliminar/<int:resena_id>/', views.eliminar_resena, name='eliminar_resena'),
+    
+    # 📦 Pedidos
+    path('pedidos/', views.mis_pedidos, name='mis_pedidos'),
+    path('pedidos/<int:pedido_id>/', views.detalle_pedido, name='detalle_pedido'),
 ]
