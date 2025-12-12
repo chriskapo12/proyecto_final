@@ -46,6 +46,8 @@ class Producto(models.Model):
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     categoria = models.CharField(max_length=20, choices=CATEGORIAS, default='licor')
+    ubicacion = models.CharField(max_length=100, blank=True, help_text="Ej: Palermo, Buenos Aires")
+    fecha_publicacion = models.DateTimeField(auto_now_add=True, null=True)
 
     def __str__(self):
         return self.nombre
@@ -156,10 +158,41 @@ class ItemPedido(models.Model):
     nombre_producto = models.CharField(max_length=200)  # Guardamos el nombre por si se elimina el producto
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
     cantidad = models.PositiveIntegerField(default=1)
+    
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('enviado', 'Enviado'),
+        ('entregado', 'Entregado'),
+        ('cancelado', 'Cancelado'),
+    ]
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
 
     def subtotal(self):
         return self.precio_unitario * self.cantidad
 
     def __str__(self):
         return f"{self.nombre_producto} x{self.cantidad}"
+
+
+class Notificacion(models.Model):
+    """Notificaciones para usuarios"""
+    TIPO_CHOICES = [
+        ('venta', 'Nueva Venta'),
+        ('mensaje', 'Nuevo Mensaje'),
+        ('resena', 'Nueva Reseña'),
+        ('sistema', 'Sistema'),
+    ]
+
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notificaciones')
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    mensaje = models.TextField()
+    leido = models.BooleanField(default=False)
+    link = models.CharField(max_length=200, blank=True, null=True)  # URL a donde redirigir
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-fecha_creacion']
+
+    def __str__(self):
+        return f"{self.get_tipo_display()} para {self.usuario.username}"
 

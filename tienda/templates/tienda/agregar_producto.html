@@ -6,92 +6,69 @@
         <div class="card border-0 shadow-lg">
             <div class="card-body p-4 p-lg-5">
                 <h2 class="text-center text-success mb-4 fw-bold">
-                    <i class="bi bi-bag-plus-fill me-2"></i>Agregar Nuevo Producto
-                </h2>
-
-                <form method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-
-                    <!-- Categoría -->
-                    <div class="mb-3">
-                        <label for="{{ form.categoria.id_for_label }}" class="form-label fw-bold">
-                            <i class="bi bi-tag me-1"></i> Categoría
-                        </label>
-                        {{ form.categoria }}
-                        {% if form.categoria.errors %}
-                        <div class="text-danger small mt-1">{{ form.categoria.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Nombre del producto -->
-                    <div class="mb-3">
-                        <label for="{{ form.nombre.id_for_label }}" class="form-label fw-bold">
-                            <i class="bi bi-pencil-square me-1"></i> Nombre del producto
-                        </label>
-                        {{ form.nombre }}
-                        {% if form.nombre.errors %}
-                        <div class="text-danger small mt-1">{{ form.nombre.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Descripción -->
-                    <div class="mb-3">
-                        <label for="{{ form.descripcion.id_for_label }}" class="form-label fw-bold">
-                            <i class="bi bi-card-text me-1"></i> Descripción
-                        </label>
-                        {{ form.descripcion }}
-                        {% if form.descripcion.errors %}
-                        <div class="text-danger small mt-1">{{ form.descripcion.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Precio -->
-                    <div class="mb-3">
-                        <label for="{{ form.precio.id_for_label }}" class="form-label fw-bold">
-                            <i class="bi bi-currency-dollar me-1"></i> Precio
-                        </label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            {{ form.precio }}
-                        </div>
-                        {% if form.precio.errors %}
-                        <div class="text-danger small mt-1">{{ form.precio.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Imagen -->
-                    <div class="mb-4">
-                        <label for="{{ form.imagen.id_for_label }}" class="form-label fw-bold">
-                            <i class="bi bi-image me-1"></i> Imagen del producto
-                        </label>
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="flex-grow-1">
-                                {{ form.imagen }}
-                                {% if form.imagen.errors %}
-                                <div class="text-danger small mt-1">{{ form.imagen.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            <div id="preview-container" class="d-none rounded overflow-hidden border shadow-sm"
-                                style="width: 80px; height: 80px;">
-                                <img id="preview-image" src="#" alt="Vista previa" class="w-100 h-100 object-fit-cover">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Botones -->
-                    <div class="d-flex gap-3 pt-2">
-                        <a href="{% url 'tienda:productos' %}"
-                            class="btn btn-outline-secondary flex-grow-1 py-2 fw-bold">
-                            Cancelar
-                        </a>
-                        <button type="submit" class="btn btn-success flex-grow-1 py-2 fw-bold shadow-sm">
-                            <i class="bi bi-check-lg me-2"></i> Publicar Producto
-                        </button>
-                    </div>
-                </form>
+                    {{ form.nombre }}
+                    {% if form.nombre.errors %}
+                    <div class="text-danger small mt-1">{{ form.nombre.errors.0 }}</div>
+                    {% endif %}
             </div>
+
+            <!-- Descripción -->
+            <div class="mb-3">
+                <label for="{{ form.descripcion.id_for_label }}" class="form-label fw-bold">
+                    <i class="bi bi-card-text me-1"></i> Descripción
+                </label>
+                {{ form.descripcion }}
+                {% if form.descripcion.errors %}
+                <div class="text-danger small mt-1">{{ form.descripcion.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Precio -->
+            <div class="mb-3">
+                <label for="{{ form.precio.id_for_label }}" class="form-label fw-bold">
+                    <i class="bi bi-currency-dollar me-1"></i> Precio
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    {{ form.precio }}
+                </div>
+                {% if form.precio.errors %}
+                <div class="text-danger small mt-1">{{ form.precio.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Imagen -->
+            <div class="mb-4">
+                <label for="{{ form.imagen.id_for_label }}" class="form-label fw-bold">
+                    <i class="bi bi-image me-1"></i> Imagen del producto
+                </label>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="flex-grow-1">
+                        {{ form.imagen }}
+                        {% if form.imagen.errors %}
+                        <div class="text-danger small mt-1">{{ form.imagen.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div id="preview-container" class="d-none rounded overflow-hidden border shadow-sm"
+                        style="width: 80px; height: 80px;">
+                        <img id="preview-image" src="#" alt="Vista previa" class="w-100 h-100 object-fit-cover">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="d-flex gap-3 pt-2">
+                <a href="{% url 'tienda:productos' %}" class="btn btn-outline-secondary flex-grow-1 py-2 fw-bold">
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-success flex-grow-1 py-2 fw-bold shadow-sm">
+                    <i class="bi bi-check-lg me-2"></i> Publicar Producto
+                </button>
+            </div>
+            </form>
         </div>
     </div>
+</div>
 </div>
 
 <style>

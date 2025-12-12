@@ -744,6 +744,71 @@ def editar_perfil(request):
     })
 
 
+# 📊 Dashboard de Vendedor
+@login_required
+def dashboard_view(request):
+    """Panel principal del vendedor con estadísticas"""
+    from django.db.models import Sum, Count
+    from .models import ItemPedido, Producto
+    
+    # Obtener todos los items vendidos por este usuario
+    # Un ItemPedido está vinculado a un Producto, y el Producto tiene un usuario (vendedor)
+    items_vendidos = ItemPedido.objects.filter(producto__usuario=request.user).select_related('pedido', 'producto')
+    
+    # Calcular total ganado (suma de precio_unitario * cantidad)
+    total_ganado = sum(item.subtotal() for item in items_vendidos)
+    
+    # Cantidad de ventas (cantidad de items vendidos)
+    cantidad_ventas = items_vendidos.count()
+    
+    # Cantidad de productos publicados
+    productos_publicados = Producto.objects.filter(usuario=request.user).count()
+    
+    # Últimas 5 ventas
+    ultimas_ventas = items_vendidos.order_by('-pedido__fecha_pedido')[:5]
+    
+    return render(request, 'tienda/dashboard.html', {
+        'total_ganado': total_ganado,
+        'cantidad_ventas': cantidad_ventas,
+        'productos_publicados': productos_publicados,
+        'ultimas_ventas': ultimas_ventas,
+    })
+
+
+@login_required
+def mis_ventas_view(request):
+    """Listado completo de ventas realizadas"""
+    from .models import ItemPedido
+    
+    items_vendidos = ItemPedido.objects.filter(producto__usuario=request.user)\
+                                     .select_related('pedido', 'producto', 'pedido__usuario')\
+                                     .order_by('-pedido__fecha_pedido')
+    
+    return render(request, 'tienda/mis_ventas.html', {
+        'items_vendidos': items_vendidos,
+    })
+
+
+@login_required
+def actualizar_estado_item(request, item_id):
+    """Actualizar el estado de un ítem vendido"""
+    from .models import ItemPedido
+    from django.contrib import messages
+    
+    if request.method == 'POST':
+        item = get_object_or_404(ItemPedido, id=item_id, producto__usuario=request.user)
+        nuevo_estado = request.POST.get('estado')
+        
+        if nuevo_estado in dict(ItemPedido.ESTADO_CHOICES):
+            item.estado = nuevo_estado
+            item.save()
+            messages.success(request, f'Estado actualizado a "{item.get_estado_display()}"')
+        else:
+            messages.error(request, 'Estado no válido')
+            
+    return redirect('tienda:mis_ventas')
+
+
 # ========== FUNCIONALIDADES CORE ==========
 
 # ⭐ Sistema de Favoritos

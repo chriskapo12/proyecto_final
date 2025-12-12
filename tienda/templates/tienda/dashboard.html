@@ -1,0 +1,107 @@
+{% extends 'tienda/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5 fw-bold text-dark">Panel de Vendedor</h1>
+            <p class="text-muted lead">Resumen de tu actividad y ventas.</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'tienda:agregar_producto' %}" class="btn btn-primary btn-lg shadow-sm">
+                <i class="bi bi-plus-lg me-2"></i>Publicar Producto
+            </a>
+        </div>
+    </div>
+
+    <!-- Tarjetas de Estadísticas -->
+    <div class="row g-4 mb-5">
+        <!-- Total Ganado -->
+        <div class="col-md-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 bg-success text-white overflow-hidden">
+                    <div class="card-body position-relative">
+                        <div class="position-absolute top-0 end-0 p-3 opacity-25">
+                            <i class="bi bi-bag-check display-1"></i>
+                        </div>
+                        <h5 class="card-title text-white-50">Ventas Realizadas</h5>
+                        <h2 class="display-4 fw-bold mb-0">{{ cantidad_ventas }}</h2>
+                        <p class="card-text mt-2"><small>Productos vendidos</small></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Productos Publicados -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 bg-info text-white overflow-hidden">
+                    <div class="card-body position-relative">
+                        <div class="position-absolute top-0 end-0 p-3 opacity-25">
+                            <i class="bi bi-box-seam display-1"></i>
+                        </div>
+                        <h5 class="card-title text-white-50">Productos Activos</h5>
+                        <h2 class="display-4 fw-bold mb-0">{{ productos_publicados }}</h2>
+                        <p class="card-text mt-2"><small>En tu catálogo</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Últimas Ventas -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-primary"></i>Últimas Ventas</h5>
+                <a href="{% url 'tienda:mis_ventas' %}" class="btn btn-outline-primary btn-sm">Ver todas</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th scope="col" class="ps-4">Producto</th>
+                                <th scope="col">Comprador</th>
+                                <th scope="col">Fecha</th>
+                                <th scope="col">Cantidad</th>
+                                <th scope="col">Total</th>
+                                <th scope="col" class="text-end pe-4">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in ultimas_ventas %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        {% if item.producto.imagen %}
+                                        <img src="{{ item.producto.imagen.url }}" alt="" class="rounded me-3" width="40"
+                                            height="40" style="object-fit: cover;">
+                                        {% else %}
+                                        <div class="bg-secondary rounded me-3 d-flex align-items-center justify-content-center text-white"
+                                            style="width: 40px; height: 40px;">
+                                            <i class="bi bi-image"></i>
+                                        </div>
+                                        {% endif %}
+                                        <span class="fw-medium">{{ item.nombre_producto }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle bg-light text-primary me-2 rounded-circle d-flex align-items-center justify-content-center"
+                                            style="width: 30px; height: 30px; font-size: 0.8rem;">
+                                            {{ item.pedido.usuario.username|make_list|first|upper }}
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox display-4 d-block mb-3 opacity-50"></i>
+                                    Aún no has realizado ninguna venta.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}

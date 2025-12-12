@@ -1,5 +1,6 @@
 {% extends 'tienda/base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}{{ producto.nombre }} - Bebidas Oeste{% endblock %}
 
@@ -25,13 +26,15 @@
                 <div class="col-md-6">
                     <div class="card-body p-4 p-lg-5 d-flex flex-column h-100">
                         <div class="d-flex justify-content-between align-items-start mb-2">
-                            <span class="badge bg-info bg-opacity-10 text-info rounded-pill px-3 py-2">{{ producto.get_categoria_display }}</span>
+                            <span class="badge bg-info bg-opacity-10 text-info rounded-pill px-3 py-2">{{
+                                producto.get_categoria_display }}</span>
                             {% if user.is_authenticated %}
-                            <button class="btn btn-link text-decoration-none p-0 btn-favorito" data-producto-id="{{ producto.id }}">
+                            <button class="btn btn-link text-decoration-none p-0 btn-favorito"
+                                data-producto-id="{{ producto.id }}">
                                 {% if es_favorito %}
-                                    <i class="bi bi-heart-fill text-danger fs-3"></i>
+                                <i class="bi bi-heart-fill text-danger fs-3"></i>
                                 {% else %}
-                                    <i class="bi bi-heart text-danger fs-3"></i>
+                                <i class="bi bi-heart text-danger fs-3"></i>
                                 {% endif %}
                             </button>
                             {% endif %}
@@ -46,23 +49,28 @@
                                 {% with promedio=promedio_calificacion %}
                                 <div class="me-2">
                                     {% for i in "12345" %}
-                                        {% if forloop.counter <= promedio %}
-                                            <i class="bi bi-star-fill text-warning"></i>
-                                        {% elif forloop.counter|add:"-1" < promedio %}
-                                            <i class="bi bi-star-half text-warning"></i>
-                                        {% else %}
+                                    {% if forloop.counter <= promedio %} <i class="bi bi-star-fill text-warning"></i>
+                                        {% elif forloop.counter|add:"-1" < promedio %} <i
+                                            class="bi bi-star-half text-warning"></i>
+                                            {% else %}
                                             <i class="bi bi-star text-warning"></i>
-                                        {% endif %}
-                                    {% endfor %}
+                                            {% endif %}
+                                            {% endfor %}
                                 </div>
                                 {% endwith %}
-                                <span class="text-muted">({{ total_resenas }} reseña{{ total_resenas|pluralize:",s" }})</span>
+                                <span class="text-muted">({{ total_resenas }} reseña{{ total_resenas|pluralize:",s"
+                                    }})</span>
                             </div>
                         </div>
                         {% endif %}
 
                         <div class="mb-4">
-                            <h2 class="text-success fw-bold display-6">${{ producto.precio }}</h2>
+                            <h2 class="text-success fw-bold display-6 mb-1">${{ producto.precio|intcomma }}</h2>
+                            {% if producto.ubicacion %}
+                            <p class="text-muted">
+                                <i class="bi bi-geo-alt-fill me-1"></i> {{ producto.ubicacion }}
+                            </p>
+                            {% endif %}
                         </div>
 
                         <div class="mb-4 flex-grow-1">
@@ -101,7 +109,8 @@
                                 </div>
                                 {% else %}
                                 <div class="col">
-                                    <a href="{% url 'tienda:editar_producto' producto.id %}" class="btn btn-outline-warning w-100 py-2">
+                                    <a href="{% url 'tienda:editar_producto' producto.id %}"
+                                        class="btn btn-outline-warning w-100 py-2">
                                         <i class="bi bi-pencil-square me-2"></i> Editar
                                     </a>
                                 </div>
@@ -141,9 +150,9 @@
                     <div class="mb-4 p-4 bg-light rounded">
                         <h5 class="mb-3">
                             {% if resena_usuario %}
-                                Editar tu reseña
+                            Editar tu reseña
                             {% else %}
-                                Deja tu reseña
+                            Deja tu reseña
                             {% endif %}
                         </h5>
                         <form method="post" action="{% url 'tienda:agregar_resena' producto.id %}">
@@ -152,26 +161,28 @@
                                 <label class="form-label fw-bold">Calificación</label>
                                 <div class="rating-input">
                                     {% for i in "12345" %}
-                                    <input type="radio" name="calificacion" value="{{ i }}" id="star{{ i }}" 
-                                           {% if resena_usuario and resena_usuario.calificacion == forloop.counter %}checked{% endif %}>
+                                    <input type="radio" name="calificacion" value="{{ i }}" id="star{{ i }}" {% if
+                                        resena_usuario and resena_usuario.calificacion == forloop.counter %}checked{%
+                                        endif %}>
                                     <label for="star{{ i }}"><i class="bi bi-star-fill"></i></label>
                                     {% endfor %}
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label for="comentario" class="form-label fw-bold">Comentario (opcional)</label>
-                                <textarea class="form-control" name="comentario" id="comentario" rows="3" maxlength="500" placeholder="Comparte tu experiencia con este producto...">{% if resena_usuario %}{{ resena_usuario.comentario }}{% endif %}</textarea>
+                                <textarea class="form-control" name="comentario" id="comentario" rows="3"
+                                    maxlength="500"
+                                    placeholder="Comparte tu experiencia con este producto...">{% if resena_usuario %}{{ resena_usuario.comentario }}{% endif %}</textarea>
                                 <small class="text-muted">Máximo 500 caracteres</small>
                             </div>
                             <div class="d-flex gap-2">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-send"></i> 
+                                    <i class="bi bi-send"></i>
                                     {% if resena_usuario %}Actualizar reseña{% else %}Publicar reseña{% endif %}
                                 </button>
                                 {% if resena_usuario %}
-                                <a href="{% url 'tienda:eliminar_resena' resena_usuario.id %}" 
-                                   class="btn btn-outline-danger"
-                                   onclick="return confirm('¿Eliminar tu reseña?')">
+                                <a href="{% url 'tienda:eliminar_resena' resena_usuario.id %}"
+                                    class="btn btn-outline-danger" onclick="return confirm('¿Eliminar tu reseña?')">
                                     <i class="bi bi-trash"></i> Eliminar
                                 </a>
                                 {% endif %}
@@ -190,12 +201,12 @@
                                     <strong class="text-dark">{{ resena.usuario.username }}</strong>
                                     <div class="mt-1">
                                         {% for i in "12345" %}
-                                            {% if forloop.counter <= resena.calificacion %}
-                                                <i class="bi bi-star-fill text-warning"></i>
+                                        {% if forloop.counter <= resena.calificacion %} <i
+                                            class="bi bi-star-fill text-warning"></i>
                                             {% else %}
-                                                <i class="bi bi-star text-warning"></i>
+                                            <i class="bi bi-star text-warning"></i>
                                             {% endif %}
-                                        {% endfor %}
+                                            {% endfor %}
                                     </div>
                                 </div>
                                 <small class="text-muted">{{ resena.fecha_creacion|date:"d/m/Y" }}</small>
@@ -222,30 +233,30 @@
 </div>
 
 <style>
-/* Sistema de calificación con estrellas */
-.rating-input {
-    display: flex;
-    flex-direction: row-reverse;
-    justify-content: flex-end;
-    gap: 0.25rem;
-}
+    /* Sistema de calificación con estrellas */
+    .rating-input {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        gap: 0.25rem;
+    }
 
-.rating-input input {
-    display: none;
-}
+    .rating-input input {
+        display: none;
+    }
 
-.rating-input label {
-    cursor: pointer;
-    font-size: 2rem;
-    color: #ddd;
-    transition: color 0.2s;
-}
+    .rating-input label {
+        cursor: pointer;
+        font-size: 2rem;
+        color: #ddd;
+        transition: color 0.2s;
+    }
 
-.rating-input label:hover,
-.rating-input label:hover ~ label,
-.rating-input input:checked ~ label {
-    color: #ffc107;
-}
+    .rating-input label:hover,
+    .rating-input label:hover~label,
+    .rating-input input:checked~label {
+        color: #ffc107;
+    }
 </style>
 
 <script>
@@ -307,11 +318,11 @@
         // Botón de favoritos
         const btnFavorito = document.querySelector(".btn-favorito");
         if (btnFavorito) {
-            btnFavorito.addEventListener("click", function(e) {
+            btnFavorito.addEventListener("click", function (e) {
                 e.preventDefault();
                 const productoId = this.dataset.productoId;
                 const icon = this.querySelector('i');
-                
+
                 fetch(`/favoritos/toggle/${productoId}/`, {
                     method: 'POST',
                     headers: {
@@ -319,17 +330,17 @@
                         'Content-Type': 'application/json',
                     },
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'added') {
-                        icon.classList.remove('bi-heart');
-                        icon.classList.add('bi-heart-fill');
-                    } else {
-                        icon.classList.remove('bi-heart-fill');
-                        icon.classList.add('bi-heart');
-                    }
-                })
-                .catch(error => console.error('Error:', error));
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'added') {
+                            icon.classList.remove('bi-heart');
+                            icon.classList.add('bi-heart-fill');
+                        } else {
+                            icon.classList.remove('bi-heart-fill');
+                            icon.classList.add('bi-heart');
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
             });
         }
     });

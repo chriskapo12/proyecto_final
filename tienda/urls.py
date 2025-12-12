@@ -43,6 +43,11 @@ urlpatterns = [
     path('perfil/<int:usuario_id>/', views.ver_perfil_usuario, name='ver_perfil_usuario'),
     path('perfil/editar/', views.editar_perfil, name='editar_perfil'),
     
+    # 📊 Dashboard Vendedor
+    path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('mis-ventas/', views.mis_ventas_view, name='mis_ventas'),
+    path('mis-ventas/actualizar/<int:item_id>/', views.actualizar_estado_item, name='actualizar_estado_item'),
+    
     # ⭐ Favoritos
     path('favoritos/', views.mis_favoritos, name='mis_favoritos'),
     path('favoritos/toggle/<int:producto_id>/', views.toggle_favorito, name='toggle_favorito'),

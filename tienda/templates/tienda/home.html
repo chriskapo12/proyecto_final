@@ -1,106 +1,158 @@
 {% extends 'tienda/base.html' %}
-{% load static %}
+{% load humanize %}
 
 {% block content %}
-<div class="row">
-    <!-- Contenido Principal (Productos) -->
-    <div class="col-lg-9 order-lg-1">
-        <!-- Encabezado -->
-        <div class="text-center mb-5">
-            <h1 class="display-4 fw-bold text-dark mb-3">🍺 Bienvenido a Bebidas Oeste</h1>
-            {% if user.is_authenticated %}
-            <p class="lead text-muted">¡Hola {{ user.username }}! Disfrutá explorando nuestros productos.</p>
-            {% else %}
-            <p class="lead text-muted mb-4">Tu tienda de bebidas online. Explorá nuestra selección de productos.</p>
-            <div class="alert alert-info border-0 shadow-sm mx-auto" style="max-width: 650px;">
-                <h5 class="alert-heading mb-3"><i class="bi bi-info-circle-fill"></i> ¿Querés comprar?</h5>
-                <p class="mb-3">Explorá todos nuestros productos. Para agregar al carrito y realizar compras, necesitás una cuenta gratuita.</p>
-                <div class="d-flex gap-2 justify-content-center flex-wrap">
-                    <a href="{% url 'tienda:register' %}" class="btn btn-primary btn-lg">
-                        <i class="bi bi-person-plus-fill"></i> Crear cuenta gratis
-                    </a>
-                    <a href="{% url 'tienda:login' %}" class="btn btn-outline-primary btn-lg">
-                        <i class="bi bi-box-arrow-in-right"></i> Ya tengo cuenta
-                    </a>
+<div class="container py-4">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="p-5 text-white bg-dark rounded-3 shadow-lg position-relative overflow-hidden"
+                style="background: linear-gradient(45deg, #1a1a1a, #2c3e50);">
+                <div class="position-relative z-1">
+                    <h1 class="display-4 fw-bold mb-3">Bienvenido a Bebidas Oeste</h1>
+                    <p class="lead mb-4">Las mejores bebidas al mejor precio, directo a tu puerta.</p>
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'tienda:register' %}"
+                        class="btn btn-primary btn-lg px-4 me-2 shadow-sm">Registrarse</a>
+                    <a href="{% url 'tienda:login' %}" class="btn btn-outline-light btn-lg px-4">Iniciar Sesión</a>
+                    {% endif %}
+                </div>
+                <div class="position-absolute top-0 end-0 opacity-25">
+                    <i class="bi bi-cup-straw display-1" style="font-size: 15rem; transform: rotate(15deg);"></i>
                 </div>
             </div>
-            {% endif %}
+        </div>
+    </div>
+
+    <!-- Secciones de Productos -->
+    <div class="row">
+        <!-- Sidebar de Filtros (Desktop) -->
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="sticky-top" style="top: 90px; z-index: 1000;">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold mb-3"><i class="bi bi-funnel"></i> Filtros</h5>
+                        <form method="get">
+                            <div class="mb-3">
+                                <label for="categoria" class="form-label fw-medium">Categoría</label>
+                                <select name="categoria" id="categoria" class="form-select"
+                                    onchange="this.form.submit()">
+                                    <option value="">Todas</option>
+                                    {% for value, label in categorias %}
+                                    <option value="{{ value }}" {% if categoria_seleccionada==value %}selected{% endif
+                                        %}>{{
+                                        label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="d-grid">
+                                <a href="{% url 'tienda:home' %}" class="btn btn-outline-secondary btn-sm">Limpiar
+                                    Filtros</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Título Sección -->
-        <div class="d-flex align-items-center mb-4">
-            <h2 class="h2 fw-bold text-dark mb-0">
-                {% if user.is_authenticated %}
-                Últimos productos <span class="fs-4">🔥</span>
-                {% else %}
-                Nuestros Productos <span class="fs-4">🛒</span>
-                {% endif %}
-            </h2>
-        </div>
+        <!-- Lista de Productos -->
+        <div class="col-lg-9">
+            <!-- Header de Sección -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-0">
+                        {% if user.is_authenticated %}
+                        Últimos productos <span class="fs-4">🔥</span>
+                        {% else %}
+                        Nuestros Productos <span class="fs-4">🚀</span>
+                        {% endif %}
+                    </h2>
+                </div>
 
-        <!-- Grid de Productos -->
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4" id="products-container">
-            {% for producto in ultimos_productos %}
-            <div class="col">
-                <div class="card h-100 border-0 shadow-sm hover-shadow transition-all">
-                    <!-- Imagen -->
-                    <div class="position-relative">
+                <!-- Filtro Mobile -->
+                <div class="d-lg-none">
+                    <button class="btn btn-outline-dark" type="button" data-bs-toggle="offcanvas"
+                        data-bs-target="#filterOffcanvas">
+                        <i class="bi bi-funnel"></i> Filtros
+                    </button>
+                </div>
+            </div>
+
+            <!-- Grid de Productos -->
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4" id="products-container">
+                {% for producto in ultimos_productos %}
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm hover-shadow transition-all">
                         <a href="{% url 'tienda:detalle_producto' producto.id %}" class="text-decoration-none">
-                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center p-3"
-                                style="height: 200px;">
+                            <div class="card-img-top bg-light position-relative overflow-hidden"
+                                style="height: 250px !important;">
                                 {% if producto.imagen %}
-                                <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="img-fluid"
-                                    style="max-height: 100%; object-fit: contain;">
+                                <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="w-100 h-100"
+                                    style="object-fit: cover;">
                                 {% else %}
-                                <i class="bi bi-card-image display-1 text-secondary opacity-25"></i>
+                                <div class="w-100 h-100 d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-card-image display-1 text-secondary opacity-25"></i>
+                                </div>
                                 {% endif %}
                             </div>
                         </a>
-                        
+
                         <!-- Botón de favorito -->
                         {% if user.is_authenticated %}
-                        <button class="btn btn-link position-absolute top-0 end-0 m-2 btn-favorito" 
-                                data-producto-id="{{ producto.id }}"
-                                style="background: rgba(255,255,255,0.9); border-radius: 50%; width: 40px; height: 40px; padding: 0;">
-                          {% if producto.es_favorito %}
-                            <i class="bi bi-heart-fill text-danger fs-5"></i>
-                          {% else %}
-                            <i class="bi bi-heart text-danger fs-5"></i>
-                          {% endif %}
+                        <button class="btn btn-link position-absolute top-0 end-0 m-2 btn-favorito shadow-sm"
+                            data-producto-id="{{ producto.id }}"
+                            style="background: rgba(255,255,255,0.9); border-radius: 50%; width: 35px; height: 35px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                            {% if producto.es_favorito %}
+                            <i class="bi bi-heart-fill text-danger"></i>
+                            {% else %}
+                            <i class="bi bi-heart text-danger"></i>
+                            {% endif %}
                         </button>
                         {% endif %}
                     </div>
 
                     <!-- Cuerpo -->
-                    <div class="card-body d-flex flex-column">
-                        <div class="mb-2">
-                            <span class="badge bg-info bg-opacity-10 text-info rounded-pill">{{ producto.get_categoria_display }}</span>
+                    <div class="card-body d-flex flex-column p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <h5 class="text-success fw-bold mb-0">${{ producto.precio|intcomma }}</h5>
+                            {% if producto.ubicacion %}
+                            <small class="text-muted text-truncate" style="max-width: 100px;"
+                                title="{{ producto.ubicacion }}">
+                                <i class="bi bi-geo-alt-fill me-1"></i>{{ producto.ubicacion }}
+                            </small>
+                            {% endif %}
                         </div>
+
+                        <div class="mb-1">
+                            <span class="badge bg-info bg-opacity-10 text-info rounded-pill"
+                                style="font-size: 0.7rem;">{{ producto.get_categoria_display }}</span>
+                        </div>
+
                         <a href="{% url 'tienda:detalle_producto' producto.id %}"
                             class="text-decoration-none text-dark">
-                            <h5 class="card-title fw-bold mb-1 text-truncate">{{ producto.nombre }}</h5>
+                            <h6 class="card-title fw-bold mb-2 text-truncate" title="{{ producto.nombre }}">{{
+                                producto.nombre }}</h6>
                         </a>
-                        
+
                         <!-- Calificación -->
                         {% if producto.promedio_calificacion %}
                         <div class="mb-2">
-                          {% with promedio=producto.promedio_calificacion %}
-                          {% for i in "12345" %}
-                            {% if forloop.counter <= promedio %}
-                              <i class="bi bi-star-fill text-warning small"></i>
-                            {% elif forloop.counter|add:"-1" < promedio %}
-                              <i class="bi bi-star-half text-warning small"></i>
-                            {% else %}
-                              <i class="bi bi-star text-warning small"></i>
-                            {% endif %}
-                          {% endfor %}
-                          {% endwith %}
+                            {% with promedio=producto.promedio_calificacion %}
+                            {% for i in "12345" %}
+                            {% if forloop.counter <= promedio %} <i class="bi bi-star-fill text-warning small"
+                                style="font-size: 0.7rem;"></i>
+                                {% elif forloop.counter|add:"-1" < promedio %} <i
+                                    class="bi bi-star-half text-warning small" style="font-size: 0.7rem;"></i>
+                                    {% else %}
+                                    <i class="bi bi-star text-warning small" style="font-size: 0.7rem;"></i>
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% endwith %}
                         </div>
                         {% endif %}
-                        
-                        <p class="card-text text-muted small flex-grow-1">{{ producto.descripcion|truncatechars:60 }}
-                        </p>
-                        <h5 class="text-success fw-bold mb-3">${{ producto.precio }}</h5>
+
+                        <p class="card-text text-muted small flex-grow-1 mb-3" style="font-size: 0.85rem;">{{
+                            producto.descripcion|truncatechars:60 }}</p>
 
                         <!-- Botones -->
                         <div class="d-flex gap-2 mt-auto">
@@ -116,7 +168,8 @@
                             </button>
                             {% endif %}
                             {% else %}
-                            <a href="{% url 'tienda:register' %}" class="btn btn-primary flex-grow-1" title="Registrate para comprar">
+                            <a href="{% url 'tienda:register' %}" class="btn btn-primary flex-grow-1"
+                                title="Registrate para comprar">
                                 <i class="bi bi-lock-fill"></i> Registrate para comprar
                             </a>
                             {% endif %}
@@ -130,283 +183,163 @@
             </div>
             {% endfor %}
         </div>
-
-        <!-- Loading Spinner -->
-        <div id="loading-indicator" class="text-center py-4 d-none">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Cargando...</span>
-            </div>
-        </div>
     </div>
+</div>
 
-    <!-- Panel Lateral (Filtros) -->
-    <div class="col-lg-3 order-lg-2 mb-4 mb-lg-0">
-        <div class="sticky-top" style="top: 90px; z-index: 1000;">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold mb-3"><i class="bi bi-funnel"></i> Filtros</h5>
-                    <form method="get">
-                        <div class="mb-3">
-                            <label for="categoria" class="form-label fw-medium">Categoría</label>
-                            <select name="categoria" id="categoria" class="form-select" onchange="this.form.submit()">
-                                <option value="">Todas</option>
-                                {% for value, label in categorias %}
-                                <option value="{{ value }}" {% if categoria_seleccionada == value %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="d-grid">
-                            <a href="{% url 'tienda:home' %}" class="btn btn-outline-secondary btn-sm">Limpiar
-                                Filtros</a>
-                        </div>
-                    </form>
-                </div>
+<!-- Offcanvas Filtros Mobile -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="filterOffcanvas" aria-labelledby="filterOffcanvasLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title fw-bold" id="filterOffcanvasLabel">Filtros</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form method="get">
+            <div class="mb-3">
+                <label for="categoria-mobile" class="form-label fw-medium">Categoría</label>
+                <select name="categoria" id="categoria-mobile" class="form-select" onchange="this.form.submit()">
+                    <option value="">Todas</option>
+                    {% for value, label in categorias %}
+                    <option value="{{ value }}" {% if categoria_seleccionada==value %}selected{% endif %}>{{
+                        label }}</option>
+                    {% endfor %}
+                </select>
             </div>
+            <div class="d-grid">
+                <a href="{% url 'tienda:home' %}" class="btn btn-outline-secondary">Limpiar Filtros</a>
+            </div>
+        </form>
+    </div>
+</div>
 
-            <!-- Banner Promocional (Opcional) -->
-            <div class="card border-0 shadow-sm mt-3 bg-primary text-white">
-                <div class="card-body text-center">
-                    <h5 class="fw-bold">¡Oferta Especial!</h5>
-                    <p class="small mb-2">Envío gratis en compras mayores a $10.000</p>
-                    <i class="bi bi-truck display-4"></i>
-                </div>
+<!-- Modal Chat -->
+<div class="modal fade" id="chatModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Chat con <span id="chatVendedorNombre"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="chatForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="vendedorId" name="destinatario_id">
+                    <div class="mb-3">
+                        <textarea class="form-control" id="mensajeContent" rows="3" placeholder="Escribe tu mensaje..."
+                            required></textarea>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-    .hover-shadow:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
-    }
+{% endblock %}
 
-    .transition-all {
-        transition: all 0.3s ease;
-    }
-
-    /* Dark Mode Adjustments */
-    [data-bs-theme="dark"] .card {
-        background-color: #212529;
-        border-color: #373b3e;
-    }
-
-    [data-bs-theme="dark"] .card-img-top {
-        background-color: #2c3034 !important;
-    }
-
-    [data-bs-theme="dark"] .text-dark {
-        color: #f8f9fa !important;
-    }
-
-    [data-bs-theme="dark"] .text-muted {
-        color: #adb5bd !important;
-    }
-</style>
-
+{% block extra_js %}
 <script>
-    document.addEventListener("DOMContentLoaded", () => {
-        // Lógica Agregar al Carrito
-        const attachCartListeners = () => {
-            document.querySelectorAll(".btn-agregar").forEach(boton => {
-                // Evitar duplicar listeners
-                if (boton.dataset.listening) return;
-                boton.dataset.listening = "true";
+    // Script para agregar al carrito
+    document.querySelectorAll('.btn-agregar').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const productoId = this.dataset.id;
+            fetch(`/tienda/agregar-al-carrito/${productoId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Actualizar contador del carrito si existe
+                        const cartBadge = document.querySelector('.badge.bg-danger');
+                        if (cartBadge) {
+                            cartBadge.textContent = data.cart_total;
+                        }
 
-                boton.addEventListener("click", (e) => {
-                    e.preventDefault();
-                    const productoId = boton.dataset.id;
-                    const originalContent = boton.innerHTML;
-
-                    fetch(`/carrito/agregar/${productoId}/`, {
-                        method: "GET",
-                        headers: { "X-Requested-With": "XMLHttpRequest" }
-                    })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                const contador = document.getElementById("contador-carrito");
-                                if (contador) contador.textContent = data.total_items;
-
-                                boton.classList.remove('btn-success');
-                                boton.classList.add('btn-dark');
-                                boton.innerHTML = '<i class="bi bi-check-lg"></i>';
-
-                                setTimeout(() => {
-                                    boton.classList.remove('btn-dark');
-                                    boton.classList.add('btn-success');
-                                    boton.innerHTML = originalContent;
-                                }, 1200);
-                            }
-                        });
-                });
-            });
-        };
-
-        // Lógica Chat Vendedor
-        const attachChatListeners = () => {
-            document.querySelectorAll('.btn-chat-vendedor').forEach(btn => {
-                if (btn.dataset.listening) return;
-                btn.dataset.listening = "true";
-
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const vendedorId = btn.dataset.vendedorId;
-                    const vendedorNombre = btn.dataset.vendedorNombre;
-
-                    const chatBtn = document.getElementById('abrir-chat');
-                    if (chatBtn) {
-                        chatBtn.click();
-                        setTimeout(() => {
-                            if (window.abrirConversacion) {
-                                window.abrirConversacion(parseInt(vendedorId), vendedorNombre);
-                            }
-                        }, 500);
+                        // Mostrar toast o alerta
+                        const toast = document.createElement('div');
+                        toast.className = 'position-fixed bottom-0 end-0 p-3';
+                        toast.style.zIndex = '11';
+                        toast.innerHTML = `
+                        <div class="toast show align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    Producto agregado al carrito
+                                </div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                        </div>
+                    `;
+                        document.body.appendChild(toast);
+                        setTimeout(() => toast.remove(), 3000);
                     }
                 });
-            });
-        };
-
-        // Lógica de Favoritos
-        const attachFavoritosListeners = () => {
-            document.querySelectorAll('.btn-favorito').forEach(btn => {
-                if (btn.dataset.listening) return;
-                btn.dataset.listening = "true";
-
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const productoId = this.dataset.productoId;
-                    const icon = this.querySelector('i');
-                    
-                    fetch(`/favoritos/toggle/${productoId}/`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': '{{ csrf_token }}',
-                            'Content-Type': 'application/json',
-                        },
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'added') {
-                            icon.classList.remove('bi-heart');
-                            icon.classList.add('bi-heart-fill');
-                        } else {
-                            icon.classList.remove('bi-heart-fill');
-                            icon.classList.add('bi-heart');
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
-                });
-            });
-        };
-
-        attachCartListeners();
-        attachChatListeners();
-        attachFavoritosListeners();
-
-        // Scroll Infinito
-        const container = document.getElementById('products-container');
-        const loading = document.getElementById('loading-indicator');
-        function createCardHTML(prod) {
-            const imagenUrl = prod.imagen || '';
-            const imgTag = imagenUrl
-                ? `<img src="${imagenUrl}" alt="${prod.nombre}" class="img-fluid" style="max-height: 100%; object-fit: contain;">`
-                : `<i class="bi bi-card-image display-1 text-secondary opacity-25"></i>`;
-
-            const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
-            const currentUserId = {{ user.id|default:0 }};
-            
-            let buttonsHTML = '';
-            if (isAuthenticated) {
-                buttonsHTML = `
-                    <button class="btn btn-success flex-grow-1 btn-agregar" data-id="${prod.id}">
-                        <i class="bi bi-cart-plus"></i>
-                    </button>
-                    ${prod.usuario_id != currentUserId ? `
-                    <button class="btn btn-outline-primary btn-chat-vendedor" 
-                            data-vendedor-id="${prod.usuario_id}" 
-                            data-vendedor-nombre="${prod.usuario_nombre}">
-                        <i class="bi bi-chat-dots"></i>
-                    </button>` : ''}
-                `;
-            } else {
-                buttonsHTML = `
-                    <a href="/register/" class="btn btn-primary flex-grow-1" title="Registrate para comprar">
-                        <i class="bi bi-lock-fill"></i> Registrate para comprar
-                    </a>
-                `;
-            }
-
-            return `
-            <div class="col fade-in">
-                <div class="card h-100 border-0 shadow-sm hover-shadow transition-all">
-                    <a href="/productos/${prod.id}/" class="text-decoration-none">
-                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center p-3" style="height: 200px;">
-                            ${imgTag}
-                        </div>
-                    </a>
-                    <div class="card-body d-flex flex-column">
-                        <div class="mb-2">
-                            <span class="badge bg-info bg-opacity-10 text-info rounded-pill">${prod.categoria}</span>
-                        </div>
-                        <a href="/productos/${prod.id}/" class="text-decoration-none text-dark">
-                            <h5 class="card-title fw-bold mb-1 text-truncate">${prod.nombre}</h5>
-                        </a>
-                        <p class="card-text text-muted small flex-grow-1">${prod.descripcion.substring(0, 60)}...</p>
-                        <h5 class="text-success fw-bold mb-3">$${prod.precio}</h5>
-                        <div class="d-flex gap-2 mt-auto">
-                            ${buttonsHTML}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            `;
-        }
-                        </div >
-                    </div >
-                </div >
-            </div >
-            `;
-    }
-
-    async function loadMore() {
-        if (loadingMore || !hasNext) return;
-        loadingMore = true;
-        loading.classList.remove('d-none');
-        page += 1;
-
-        try {
-            const params = new URLSearchParams({ page, page_size: pageSize, categoria: currentCategory });
-            // Aseguramos que la URL no tenga espacios
-            const res = await fetch(`/ productos / api /? ${ params }`);
-            if (!res.ok) throw new Error('Error en la respuesta de la API');
-            
-            const data = await res.json();
-            
-            hasNext = data.has_next;
-            data.products.forEach(prod => {
-                container.insertAdjacentHTML('beforeend', createCardHTML(prod));
-            });
-            
-            attachCartListeners();
-            attachChatListeners();
-            attachFavoritosListeners();
-        } catch (err) {
-            console.error("Error cargando más productos:", err);
-            page -= 1;
-        } finally {
-            loadingMore = false;
-            loading.classList.add('d-none');
-        }
-    }
-
-    window.addEventListener('scroll', () => {
-        if (!hasNext || loadingMore) return;
-        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 300) {
-            loadMore();
-        }
+        });
     });
-});
+
+    // Script para favoritos
+    document.querySelectorAll('.btn-favorito').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const productoId = this.dataset.productoId;
+            const icon = this.querySelector('i');
+
+            fetch(`/tienda/toggle-favorito/${productoId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'added') {
+                        icon.classList.remove('bi-heart');
+                        icon.classList.add('bi-heart-fill');
+                    } else {
+                        icon.classList.remove('bi-heart-fill');
+                        icon.classList.add('bi-heart');
+                    }
+                });
+        });
+    });
+
+    // Script para chat
+    const chatModal = new bootstrap.Modal(document.getElementById('chatModal'));
+    document.querySelectorAll('.btn-chat-vendedor').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.getElementById('vendedorId').value = this.dataset.vendedorId;
+            document.getElementById('chatVendedorNombre').textContent = this.dataset.vendedorNombre;
+            chatModal.show();
+        });
+    });
+
+    document.getElementById('chatForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const destinatarioId = document.getElementById('vendedorId').value;
+        const contenido = document.getElementById('mensajeContent').value;
+
+        fetch('/tienda/enviar-mensaje/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `destinatario_id=${destinatarioId}&contenido=${encodeURIComponent(contenido)}`
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    chatModal.hide();
+                    document.getElementById('mensajeContent').value = '';
+                    alert('Mensaje enviado correctamente');
+                }
+            });
+    });
 </script>
 {% endblock %}
