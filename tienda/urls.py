@@ -31,6 +31,7 @@ urlpatterns = [
     path('pago-exitoso/', views.pago_exitoso, name='pago_exitoso'),
     path('pago-fallido/', views.pago_fallido, name='pago_fallido'),
     path('pago-pendiente/', views.pago_pendiente, name='pago_pendiente'),
+    path('webhooks/mercadopago/', views.mercadopago_webhook, name='mercadopago_webhook'),
     
     # 💬 Chat
     path('chat/conversaciones/', views.obtener_conversaciones, name='obtener_conversaciones'),
@@ -55,8 +56,18 @@ urlpatterns = [
     # 📝 Reseñas
     path('resenas/agregar/<int:producto_id>/', views.agregar_resena, name='agregar_resena'),
     path('resenas/eliminar/<int:resena_id>/', views.eliminar_resena, name='eliminar_resena'),
+    path('preguntas/agregar/<int:producto_id>/', views.agregar_pregunta, name='agregar_pregunta'),
+    path('preguntas/responder/<int:pregunta_id>/', views.responder_pregunta, name='responder_pregunta'),
     
     # 📦 Pedidos
     path('pedidos/', views.mis_pedidos, name='mis_pedidos'),
     path('pedidos/<int:pedido_id>/', views.detalle_pedido, name='detalle_pedido'),
+    path('pedidos/<int:pedido_id>/confirmar-recepcion/', views.confirmar_recepcion, name='confirmar_recepcion'),
+    
+    # 🛡️ Garantía
+    path('garantia/', views.garantia, name='garantia'),
+    path('cerca/', views.productos_cerca_view, name='cerca'),
+    path('cerca/api/', views.productos_cerca_api, name='cerca_api'),
+    path('vendedores/destacados/', views.vendedores_destacados_view, name='vendedores_destacados'),
+    path('vendedores/<int:usuario_id>/calificar/', views.calificar_vendedor, name='calificar_vendedor'),
 ]

@@ -63,7 +63,7 @@
                 </label>
             </div>
             
-            <!-- Información personal (requerida) -->
+            <!-- Información personal y de envío (requerida) -->
             <div style="display:grid; gap:15px;">
                 <h4 style="color:#374151; margin:0;">📋 Información de envío</h4>
                 <div>
@@ -76,6 +76,31 @@
                     <label for="email" style="display:block; margin-bottom:5px; color:#374151; font-weight:500;">Email *</label>
                     <input type="email" id="email" name="email" required value="{{ user.email }}"
                            style="width:100%; padding:8px; border:2px solid #e5e7eb; border-radius:8px;">
+                </div>
+                
+                <div>
+                    <label for="direccion" style="display:block; margin-bottom:5px; color:#374151; font-weight:500;">Dirección de entrega *</label>
+                    <input type="text" id="direccion" name="direccion" required placeholder="Calle 123, Piso/Depto, Ciudad"
+                           style="width:100%; padding:8px; border:2px solid #e5e7eb; border-radius:8px;">
+                </div>
+                
+                <div>
+                    <label for="telefono" style="display:block; margin-bottom:5px; color:#374151; font-weight:500;">Teléfono de contacto *</label>
+                    <input type="tel" id="telefono" name="telefono" required placeholder="+54 9 11 1234-5678"
+                           style="width:100%; padding:8px; border:2px solid #e5e7eb; border-radius:8px;">
+                </div>
+                <div>
+                    <label for="shipping_method" style="display:block; margin-bottom:5px; color:#374151; font-weight:500;">Método de envío *</label>
+                    <select id="shipping_method" name="shipping_method" required style="width:100%; padding:8px; border:2px solid #e5e7eb; border-radius:8px;">
+                        <option value="retiro">Retiro en punto (sin costo)</option>
+                        <option value="estandar">Envío estándar (+$1500)</option>
+                        <option value="express">Envío express (+$3000)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="cupon" style="display:block; margin-bottom:5px; color:#374151; font-weight:500;">Cupón de descuento</label>
+                    <input type="text" id="cupon" name="cupon" placeholder="Ej: BIENVENIDO10"
+                           style="width:100%; padding:8px; border:2px solid #e5e7eb; border-radius:8px; text-transform:uppercase;">
                 </div>
             </div>
 

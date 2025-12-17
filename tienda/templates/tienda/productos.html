@@ -12,7 +12,7 @@
   <!-- Filtros y Ordenamiento -->
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
-      <form method="get" class="row g-3">
+      <form method="get" class="row g-3" id="productos-form">
         <!-- Búsqueda -->
         <div class="col-md-4">
           <div class="input-group">
@@ -27,7 +27,7 @@
           <select class="form-select" name="categoria">
             <option value="">Todas las categorías</option>
             {% for value, label in categorias %}
-            <option value="{{ value }}" {% if categoria==value %}selected{% endif %}>{{ label }}</option>
+            <option value="{{ value }}" {% if categoria == value %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
         </div>
@@ -47,11 +47,11 @@
         <!-- Ordenar -->
         <div class="col-md-3">
           <select class="form-select" name="orden">
-            <option value="recientes" {% if orden=='recientes' or not orden %}selected{% endif %}>Más recientes</option>
-            <option value="antiguos" {% if orden=='antiguos' %}selected{% endif %}>Más antiguos</option>
-            <option value="precio_asc" {% if orden=='precio_asc' %}selected{% endif %}>Menor precio</option>
-            <option value="precio_desc" {% if orden=='precio_desc' %}selected{% endif %}>Mayor precio</option>
-            <option value="nombre" {% if orden=='nombre' %}selected{% endif %}>Nombre A-Z</option>
+            <option value="recientes" {% if orden == 'recientes' or not orden %}selected{% endif %}>Más recientes</option>
+            <option value="antiguos" {% if orden == 'antiguos' %}selected{% endif %}>Más antiguos</option>
+            <option value="precio_asc" {% if orden == 'precio_asc' %}selected{% endif %}>Menor precio</option>
+            <option value="precio_desc" {% if orden == 'precio_desc' %}selected{% endif %}>Mayor precio</option>
+            <option value="nombre" {% if orden == 'nombre' %}selected{% endif %}>Nombre A-Z</option>
           </select>
         </div>
 
@@ -62,264 +62,157 @@
     </div>
   </div>
 
-  <!-- Grid de Productos -->
-  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4">
-    {% for producto in productos %}
-    <div class="col">
-      <div class="card h-100 border-0 shadow-sm hover-shadow transition-all">
-        <a href="{% url 'tienda:detalle_producto' producto.id %}" class="text-decoration-none">
-          <div class="card-img-top bg-light position-relative overflow-hidden" style="height: 250px !important;">
-            {% if producto.imagen %}
-            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="w-100 h-100"
-              style="object-fit: cover;">
-            {% else %}
-            <div class="w-100 h-100 d-flex align-items-center justify-content-center">
-              <i class="bi bi-card-image display-1 text-secondary opacity-25"></i>
-            </div>
-            {% endif %}
-          </div>
-        </a>
-
-        <!-- Botón de favorito -->
-        {% if user.is_authenticated %}
-        <button class="btn btn-link position-absolute top-0 end-0 m-2 btn-favorito shadow-sm"
-          data-producto-id="{{ producto.id }}"
-          style="background: rgba(255,255,255,0.9); border-radius: 50%; width: 35px; height: 35px; padding: 0; display: flex; align-items: center; justify-content: center;">
-          {% if producto.es_favorito %}
-          <i class="bi bi-heart-fill text-danger"></i>
-          {% else %}
-          <i class="bi bi-heart text-danger"></i>
-          {% endif %}
-        </button>
-        {% endif %}
-      </div>
-
-      <!-- Cuerpo -->
-      <div class="card-body d-flex flex-column p-3">
-        <div class="d-flex justify-content-between align-items-start mb-1">
-          <h5 class="text-success fw-bold mb-0">${{ producto.precio|intcomma }}</h5>
-          {% if producto.ubicacion %}
-          <small class="text-muted text-truncate" style="max-width: 100px;" title="{{ producto.ubicacion }}">
-            <i class="bi bi-geo-alt-fill me-1"></i>{{ producto.ubicacion }}
-          </small>
-          {% endif %}
-        </div>
-
-        <div class="mb-1">
-          <span class="badge bg-info bg-opacity-10 text-info rounded-pill" style="font-size: 0.7rem;">{{
-            producto.get_categoria_display }}</span>
-        </div>
-
-        <a href="{% url 'tienda:detalle_producto' producto.id %}" class="text-decoration-none text-dark">
-          <h6 class="card-title fw-bold mb-2 text-truncate" title="{{ producto.nombre }}">{{ producto.nombre }}</h6>
-        </a>
-
-        <!-- Calificación -->
-        {% if producto.promedio_calificacion %}
-        <div class="mb-2">
-          {% with promedio=producto.promedio_calificacion %}
-          {% for i in "12345" %}
-          {% if forloop.counter <= promedio %} <i class="bi bi-star-fill text-warning small" style="font-size: 0.7rem;">
-            </i>
-            {% elif forloop.counter|add:"-1" < promedio %} <i class="bi bi-star-half text-warning small"
-              style="font-size: 0.7rem;"></i>
-              {% else %}
-              <i class="bi bi-star text-warning small" style="font-size: 0.7rem;"></i>
-              {% endif %}
-              {% endfor %}
-              {% endwith %}
-        </div>
-        {% endif %}
-
-        <p class="card-text text-muted small flex-grow-1 mb-3" style="font-size: 0.85rem;">{{
-          producto.descripcion|default:"Sin descripción"|truncatechars:60 }}</p>
-
-        <!-- Botones -->
-        <div class="d-flex gap-2 mt-auto">
-          <button class="btn btn-success flex-grow-1 btn-agregar" data-id="{{ producto.id }}">
-            <i class="bi bi-cart-plus"></i> Agregar
-          </button>
-
-          {% if user.is_authenticated %}
-          {% if user != producto.usuario %}
-          <button class="btn btn-outline-primary btn-chat-vendedor" data-vendedor-id="{{ producto.usuario.id }}"
-            data-vendedor-nombre="{{ producto.usuario.username }}">
-            <i class="bi bi-chat-dots"></i>
-          </button>
-          {% endif %}
-          {% else %}
-          <a href="{% url 'tienda:register' %}" class="btn btn-primary flex-grow-1" title="Registrate para comprar">
-            <i class="bi bi-lock-fill"></i>
-          </a>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-    {% empty %}
-    <div class="col-12 text-center py-5">
-      <p class="text-muted fs-5">No se encontraron productos.</p>
-    </div>
-    {% endfor %}
-  </div>
-
-  <!-- Paginación -->
-  {% if is_paginated %}
-  <nav class="mt-4">
-    <ul class="pagination justify-content-center">
-      {% if page_obj.has_previous %}
-      <li class="page-item">
-        <a class="page-link"
-          href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}{% if request.GET.precio_min %}&precio_min={{ request.GET.precio_min }}{% endif %}{% if request.GET.precio_max %}&precio_max={{ request.GET.precio_max }}{% endif %}{% if request.GET.orden %}&orden={{ request.GET.orden }}{% endif %}">Anterior</a>
-      </li>
-      {% endif %}
-
-      {% for num in page_obj.paginator.page_range %}
-      <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-        <a class="page-link"
-          href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}{% if request.GET.precio_min %}&precio_min={{ request.GET.precio_min }}{% endif %}{% if request.GET.precio_max %}&precio_max={{ request.GET.precio_max }}{% endif %}{% if request.GET.orden %}&orden={{ request.GET.orden }}{% endif %}">{{
-          num }}</a>
-      </li>
-      {% endfor %}
-
-      {% if page_obj.has_next %}
-      <li class="page-item">
-        <a class="page-link"
-          href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}{% if request.GET.precio_min %}&precio_min={{ request.GET.precio_min }}{% endif %}{% if request.GET.precio_max %}&precio_max={{ request.GET.precio_max }}{% endif %}{% if request.GET.orden %}&orden={{ request.GET.orden }}{% endif %}">Siguiente</a>
-      </li>
-      {% endif %}
-    </ul>
-  </nav>
-  {% endif %}
+  <!-- Grid de Productos (llenado vía API) -->
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4" id="productos-grid"></div>
 </div>
 
-<!-- Modal Chat -->
-<div class="modal fade" id="chatModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Chat con <span id="chatVendedorNombre"></span></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="chatForm">
-          {% csrf_token %}
-          <input type="hidden" id="vendedorId" name="destinatario_id">
-          <div class="mb-3">
-            <textarea class="form-control" id="mensajeContent" rows="3" placeholder="Escribe tu mensaje..."
-              required></textarea>
-          </div>
-          <div class="d-grid">
-            <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-  // Script para agregar al carrito
-  document.querySelectorAll('.btn-agregar').forEach(btn => {
-    btn.addEventListener('click', function () {
-      const productoId = this.dataset.id;
-      fetch(`/tienda/agregar-al-carrito/${productoId}/`, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': '{{ csrf_token }}',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({})
-      })
-        .then(response => response.json())
+  (function () {
+    const form = document.getElementById('productos-form');
+    const grid = document.getElementById('productos-grid');
+    if (!form || !grid) return;
+    let page = 1;
+    let hasNext = true;
+    let loading = false;
+    const pageSize = 12;
+    const state = {
+      q: form.querySelector('[name="q"]')?.value || '',
+      categoria: form.querySelector('[name="categoria"]')?.value || '',
+      precio_min: form.querySelector('[name="precio_min"]')?.value || '',
+      precio_max: form.querySelector('[name="precio_max"]')?.value || '',
+      orden: form.querySelector('[name="orden"]')?.value || 'recientes',
+    };
+    function getUserCoords() {
+      const lat = parseFloat(localStorage.getItem('user_lat') || 'NaN');
+      const lon = parseFloat(localStorage.getItem('user_lon') || 'NaN');
+      if (isNaN(lat) || isNaN(lon)) return null;
+      return { lat, lon };
+    }
+    function distanceKm(a, b) {
+      const R = 6371;
+      const dLat = (b.lat - a.lat) * Math.PI / 180;
+      const dLon = (b.lon - a.lon) * Math.PI / 180;
+      const lat1 = a.lat * Math.PI / 180;
+      const lat2 = b.lat * Math.PI / 180;
+      const s = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
+    }
+    function starIcons(avg) {
+      if (!avg && avg !== 0) return '';
+      let html = '';
+      for (let i = 1; i <= 5; i++) {
+        if (i <= avg) {
+          html += '<i class="bi bi-star-fill text-warning"></i>';
+        } else if (i - 1 < avg) {
+          html += '<i class="bi bi-star-half text-warning"></i>';
+        } else {
+          html += '<i class="bi bi-star text-warning"></i>';
+        }
+      }
+      return html;
+    }
+    function productCard(p) {
+      const img = p.imagen ? `<img src="${p.imagen}" alt="${p.nombre}" class="w-100 h-100" loading="lazy">` :
+        `<div class="w-100 h-100 d-flex align-items-center justify-content-center"><i class="bi bi-card-image display-1 text-secondary opacity-25"></i></div>`;
+      const price = new Intl.NumberFormat('es-AR').format(p.precio);
+      const badgeVerificado = p.email_verificado ? `<span class="badge bg-success ms-1" style="font-size:0.65rem;"><i class="bi bi-shield-check"></i></span>` : '';
+      const rating = p.promedio_calificacion ? `<div class="product-rating mt-1" style="font-size: 0.7rem;">${starIcons(p.promedio_calificacion)}</div>` : '';
+      const acciones = p.stock <= 0
+        ? `<button type="button" class="btn btn-secondary flex-grow-1" disabled><i class="bi bi-exclamation-circle"></i> Sin stock</button>`
+        : `<button type="button" class="btn btn-success btn-agregar flex-grow-1" data-id="${p.id}"><i class="bi bi-cart-plus"></i> Agregar</button>`;
+      let distancia = '';
+      const coords = getUserCoords();
+      if (coords && typeof p.latitud === 'number' && typeof p.longitud === 'number') {
+        const d = distanceKm(coords, { lat: p.latitud, lon: p.longitud });
+        if (!isNaN(d)) distancia = `<small class="text-muted mt-1">A ${d.toFixed(2)} km</small>`;
+      }
+      return `
+      <div class="col">
+        <div class="card product-card h-100 border-0 shadow-sm position-relative">
+          <a href="/productos/${p.id}/" class="text-decoration-none">
+            <div class="card-img-top product-image bg-light position-relative overflow-hidden">
+              ${img}
+            </div>
+          </a>
+          <div class="card-body p-3 d-flex flex-column">
+            <a href="/productos/${p.id}/" class="text-decoration-none text-dark">
+              <div class="product-title text-truncate" title="${p.nombre}">${p.nombre} ${badgeVerificado}</div>
+            </a>
+            <div class="product-price">$${price}</div>
+            <div class="mt-1"><span class="badge-shipping">${p.categoria}</span></div>
+            ${distancia}
+            ${rating}
+            <div class="product-actions d-flex gap-2 mt-auto">
+              ${acciones}
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }
+    function qs() {
+      const params = new URLSearchParams();
+      if (state.q) params.set('q', state.q);
+      if (state.categoria) params.set('categoria', state.categoria);
+      if (state.precio_min) params.set('precio_min', state.precio_min);
+      if (state.precio_max) params.set('precio_max', state.precio_max);
+      if (state.orden) params.set('orden', state.orden);
+      params.set('page', String(page));
+      params.set('page_size', String(pageSize));
+      return params.toString();
+    }
+    function load(reset = false) {
+      if (loading || (!hasNext && !reset)) return;
+      loading = true;
+      if (reset) {
+        page = 1;
+        hasNext = true;
+        grid.innerHTML = '';
+      }
+      fetch(`/productos/api/?${qs()}`, { credentials: 'same-origin' })
+        .then(r => r.json())
         .then(data => {
-          if (data.status === 'success') {
-            // Actualizar contador del carrito si existe
-            const cartBadge = document.querySelector('.badge.bg-danger');
-            if (cartBadge) {
-              cartBadge.textContent = data.cart_total;
-            }
-
-            // Mostrar toast o alerta
-            const toast = document.createElement('div');
-            toast.className = 'position-fixed bottom-0 end-0 p-3';
-            toast.style.zIndex = '11';
-            toast.innerHTML = `
-                        <div class="toast show align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
-                            <div class="d-flex">
-                                <div class="toast-body">
-                                    Producto agregado al carrito
-                                </div>
-                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                            </div>
-                        </div>
-                    `;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
-          }
-        });
-    });
-  });
-
-  // Script para favoritos
-  document.querySelectorAll('.btn-favorito').forEach(btn => {
-    btn.addEventListener('click', function (e) {
+          const items = data.products || [];
+          const html = items.map(productCard).join('');
+          grid.insertAdjacentHTML('beforeend', html);
+          hasNext = Boolean(data.has_next);
+          page = (data.page || page) + 1;
+        })
+        .finally(() => { loading = false; });
+    }
+    let t;
+    function debounce(fn, wait) {
+      return function (...args) {
+        clearTimeout(t);
+        t = setTimeout(() => fn.apply(this, args), wait);
+      };
+    }
+    const onChange = debounce(() => {
+      state.q = form.querySelector('[name="q"]')?.value || '';
+      state.categoria = form.querySelector('[name="categoria"]')?.value || '';
+      state.precio_min = form.querySelector('[name="precio_min"]')?.value || '';
+      state.precio_max = form.querySelector('[name="precio_max"]')?.value || '';
+      state.orden = form.querySelector('[name="orden"]')?.value || 'recientes';
+      load(true);
+    }, 250);
+    form.addEventListener('submit', function (e) {
       e.preventDefault();
-      const productoId = this.dataset.productoId;
-      const icon = this.querySelector('i');
-
-      fetch(`/tienda/toggle-favorito/${productoId}/`, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': '{{ csrf_token }}',
-          'Content-Type': 'application/json'
-        }
-      })
-        .then(response => response.json())
-        .then(data => {
-          if (data.status === 'added') {
-            icon.classList.remove('bi-heart');
-            icon.classList.add('bi-heart-fill');
-          } else {
-            icon.classList.remove('bi-heart-fill');
-            icon.classList.add('bi-heart');
-          }
-        });
+      onChange();
     });
-  });
-
-  // Script para chat
-  const chatModal = new bootstrap.Modal(document.getElementById('chatModal'));
-  document.querySelectorAll('.btn-chat-vendedor').forEach(btn => {
-    btn.addEventListener('click', function () {
-      document.getElementById('vendedorId').value = this.dataset.vendedorId;
-      document.getElementById('chatVendedorNombre').textContent = this.dataset.vendedorNombre;
-      chatModal.show();
+    ['q', 'categoria', 'precio_min', 'precio_max', 'orden'].forEach(name => {
+      const el = form.querySelector(`[name="${name}"]`);
+      if (!el) return;
+      const ev = name === 'q' ? 'input' : 'change';
+      el.addEventListener(ev, onChange);
     });
-  });
-
-  document.getElementById('chatForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const destinatarioId = document.getElementById('vendedorId').value;
-    const contenido = document.getElementById('mensajeContent').value;
-
-    fetch('/tienda/enviar-mensaje/', {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': '{{ csrf_token }}',
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: `destinatario_id=${destinatarioId}&contenido=${encodeURIComponent(contenido)}`
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === 'success') {
-          chatModal.hide();
-          document.getElementById('mensajeContent').value = '';
-          alert('Mensaje enviado correctamente');
-        }
-      });
-  });
+    window.addEventListener('scroll', function () {
+      if (!hasNext) return;
+      const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 200;
+      if (nearBottom) load(false);
+    });
+    load(true);
+  })();
 </script>
 {% endblock %}

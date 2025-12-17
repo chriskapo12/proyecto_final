@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Tienda Online{% endblock %}</title>
+    <title>{% block title %}LinkOeste{% endblock %}</title>
 
     <!-- Bootstrap 5.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -14,43 +14,73 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
+    
+    {% block extra_head %}{% endblock %}
 
     <style>
         :root {
-            --primary-color: #16a34a;
-            --primary-hover: #15803d;
+            --primary-color: #10b981;
+            --primary-hover: #0ea76f;
+            --surface-bg: #f8fafc;
+            --text-color: #0f172a;
+            --muted-color: #64748b;
+            --card-border: rgba(15, 23, 42, 0.08);
+            --shadow-sm: 0 6px 16px rgba(15, 23, 42, 0.10);
+            --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.12);
+            --radius: 14px;
         }
-
         body {
             font-family: 'Poppins', sans-serif;
+            color: var(--text-color);
+            background: var(--surface-bg);
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            letter-spacing: 0.1px;
         }
-
-        /* Personalización de Bootstrap */
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
         .btn-primary {
             background-color: var(--primary-color);
             border-color: var(--primary-color);
+            border-radius: 12px;
+            box-shadow: 0 6px 14px rgba(16, 185, 129, 0.25);
         }
-
         .btn-primary:hover {
             background-color: var(--primary-hover);
             border-color: var(--primary-hover);
         }
-
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            border-radius: 12px;
+        }
+        .btn-outline-primary:hover {
+            color: #fff;
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        .btn-success {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            border-radius: 10px;
+        }
+        .btn-secondary {
+            border-radius: 10px;
+        }
         .text-primary {
             color: var(--primary-color) !important;
         }
-
-        /* Navbar */
         .navbar-brand {
             font-weight: 700;
             color: var(--primary-color) !important;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
+            letter-spacing: 0.2px;
         }
-
-        /* Carrito flotante */
         .carrito-btn {
             position: relative;
             font-size: 1.5rem;
@@ -58,67 +88,69 @@
             cursor: pointer;
             transition: transform 0.2s;
         }
-
         .carrito-btn:hover {
-            transform: scale(1.1);
+            transform: scale(1.08);
         }
-
         .badge-count {
             position: absolute;
             top: -5px;
             right: -10px;
             font-size: 0.7rem;
         }
-
-        /* Overlay Carrito */
         .offcanvas-end {
-            width: 400px;
+            width: 420px;
+            border-radius: var(--radius) 0 0 var(--radius);
         }
-
-        /* Chat Flotante */
         .chat-panel {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 350px;
-            height: 500px;
+            bottom: 24px;
+            right: 24px;
+            width: 360px;
+            height: 520px;
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
             z-index: 1050;
             display: none;
             flex-direction: column;
             overflow: hidden;
         }
-
         .chat-panel.activo {
             display: flex;
         }
-
-        /* Dark Mode overrides */
         [data-bs-theme="dark"] .chat-panel {
             background-color: #212529;
             border: 1px solid #373b3e;
         }
-
         main {
             flex: 1;
         }
-
-        /* Animaciones */
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
+        .product-grid { display: grid; width: 100%; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.25rem; align-items: stretch; justify-items: stretch; }
+        .product-grid > div { display: block; width: 100%; }
+        .product-card { width: 100%; margin: 0; height: 440px; display: flex; flex-direction: column; background: #fff; border: 1px solid var(--card-border); border-radius: var(--radius); transition: box-shadow 0.25s ease, transform 0.25s ease; overflow: hidden; box-shadow: var(--shadow-sm); }
+        .product-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
+        .product-image { height: 230px; width: 100%; border-radius: 12px; background: #f1f5f9; }
+        .product-image img { width: 100%; height: 100%; object-fit: contain; object-position: center; }
+        .product-title { font-weight: 600; font-size: 1rem; color: #0b1220; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.6rem; }
+        .product-price { font-weight: 700; font-size: 1.2rem; color: var(--primary-color); min-height: 1.6rem; }
+        .badge-shipping { background: rgba(16,185,129,0.12); color: var(--primary-color); border-radius: 999px; padding: 4px 10px; font-size: 0.75rem; display: inline-flex; align-items: center; min-height: 1.4rem; }
+        .product-rating { min-height: 1rem; }
+        .product-actions .btn:not(.flex-grow-1) { flex: 0 0 auto; width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+        .product-actions .btn.flex-grow-1 { width: auto; height: 40px; padding: 0.5rem 0.75rem; display: inline-flex; align-items: center; justify-content: center; }
+        .form-control { border-radius: 12px; }
+        .form-control:focus { border-color: var(--primary-color); box-shadow: 0 0 0 0.25rem rgba(16,185,129,0.25); }
+        .form-select { border-radius: 12px; }
+        .form-select:focus { border-color: var(--primary-color); box-shadow: 0 0 0 0.25rem rgba(16,185,129,0.25); }
+        .btn { transition: all 0.2s ease; }
+        .btn:hover { transform: translateY(-1px); }
+        .card { border-radius: var(--radius); border: 1px solid var(--card-border); box-shadow: var(--shadow-sm); }
+        .card:hover { box-shadow: var(--shadow-lg); }
+        .nav-tabs { border-bottom: none; gap: 0.5rem; }
+        .nav-tabs .nav-link { border-radius: 999px; color: var(--muted-color); border: 1px solid transparent; }
+        .nav-tabs .nav-link:hover { border-color: rgba(16,185,129,0.25); }
+        .nav-tabs .nav-link.active { background-color: var(--primary-color); color: #fff; border-color: var(--primary-color); }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 
@@ -128,7 +160,7 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-body-tertiary sticky-top shadow-sm">
         <div class="container">
             <a class="navbar-brand" href="{% url 'tienda:home' %}">
-                <i class="bi bi-cup-straw"></i> Bebidas Oeste
+                <i class="bi bi-shop"></i> LinkOeste
             </a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
@@ -272,7 +304,7 @@
     <!-- Footer -->
     <footer class="bg-dark text-light py-4 mt-auto">
         <div class="container text-center">
-            <p class="mb-0">&copy; 2025 <span class="text-success fw-bold">Bebidas Oeste</span>. Todos los derechos
+            <p class="mb-0">&copy; 2025 <span class="text-success fw-bold">LinkOeste</span>. Todos los derechos
                 reservados.</p>
         </div>
     </footer>
@@ -337,6 +369,13 @@
 
     <!-- Scripts Lógica -->
     <script>
+        function getCookie(name) {
+            const match = document.cookie.match(new RegExp('(^|; )' + name + '=([^;]+)'));
+            return match ? decodeURIComponent(match[2]) : '';
+        }
+        function getCsrf() {
+            return getCookie('csrftoken') || '{{ csrf_token }}';
+        }
         // Dark Mode Toggle
         const themeToggle = document.getElementById('theme-toggle');
         const html = document.documentElement;
@@ -414,6 +453,132 @@
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             }).then(() => cargarCarrito());
         }
+
+        // Agregar al carrito (delegado global)
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn-agregar');
+            if (!btn) return;
+            const productoId = btn.dataset.id;
+            if (btn.dataset.loading === '1') return;
+            btn.dataset.loading = '1';
+            btn.disabled = true;
+            fetch(`/carrito/agregar/${productoId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrf(),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({})
+            })
+            .then(res => {
+                if (res.redirected) {
+                    window.location.href = res.url;
+                    throw new Error('redirected');
+                }
+                const ct = res.headers.get('content-type') || '';
+                if (!ct.includes('application/json')) {
+                    throw new Error('non-json');
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data && data.success) {
+                    const cartBadge = document.getElementById('contador-carrito');
+                    if (cartBadge && typeof data.total_items !== 'undefined') {
+                        cartBadge.textContent = data.total_items;
+                    }
+                    const toast = document.createElement('div');
+                    toast.className = 'position-fixed bottom-0 end-0 p-3';
+                    toast.style.zIndex = '1055';
+                    toast.innerHTML = `
+                        <div class="toast show align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                            <div class="d-flex">
+                                <div class="toast-body">Producto agregado al carrito</div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                        </div>`;
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 2500);
+                } else {
+                    const toast = document.createElement('div');
+                    toast.className = 'position-fixed bottom-0 end-0 p-3';
+                    toast.style.zIndex = '1055';
+                    toast.innerHTML = `
+                        <div class="toast show align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                            <div class="d-flex">
+                                <div class="toast-body">${(data && data.message) ? data.message : 'No se pudo agregar al carrito'}</div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                        </div>`;
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 2500);
+                }
+            })
+            .catch((err) => {
+                const toast = document.createElement('div');
+                toast.className = 'position-fixed bottom-0 end-0 p-3';
+                toast.style.zIndex = '1055';
+                toast.innerHTML = `
+                    <div class="toast show align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">No se pudo agregar al carrito</div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 2500);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.dataset.loading = '0';
+            });
+        });
+
+        // Favoritos (delegado global)
+        document.addEventListener('click', (e) => {
+            const btnFav = e.target.closest('.btn-favorito');
+            if (!btnFav) return;
+            const productoId = btnFav.dataset.productoId;
+            const icon = btnFav.querySelector('i');
+            fetch(`/favoritos/toggle/${productoId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrf(),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'added') {
+                    icon.classList.remove('bi-heart');
+                    icon.classList.add('bi-heart-fill');
+                } else {
+                    icon.classList.remove('bi-heart-fill');
+                    icon.classList.add('bi-heart');
+                }
+            });
+        });
+
+        // Abrir chat desde tarjeta de producto (delegado global)
+        document.addEventListener('click', (e) => {
+            const btnChat = e.target.closest('.btn-chat-vendedor');
+            if (!btnChat) return;
+            const vendedorId = btnChat.dataset.vendedorId;
+            const vendedorNombre = btnChat.dataset.vendedorNombre;
+            const chatBtn = document.getElementById('abrir-chat');
+            if (chatBtn) {
+                chatBtn.click();
+                setTimeout(() => {
+                    if (typeof abrirConversacion === 'function') {
+                        abrirConversacion(parseInt(vendedorId), vendedorNombre);
+                    }
+                }, 400);
+            }
+        });
 
         // Lógica del Chat (Simplificada para Bootstrap)
         const chatPanel = document.getElementById('chat-panel');
@@ -521,6 +686,7 @@
                 });
         });
     </script>
+    {% block extra_js %}{% endblock %}
 
 </body>
 

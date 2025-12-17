@@ -1,0 +1,26 @@
+{% extends 'tienda/base.html' %}
+{% block title %}Vendedores destacados - LinkOeste{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h2 class="fw-bold mb-3">Vendedores destacados</h2>
+  <div class="row g-3">
+    {% for u in usuarios %}
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body d-flex align-items-center gap-3">
+          <img src="https://ui-avatars.com/api/?name={{ u.username }}&size=64&background=16b981&color=fff&bold=true" class="rounded-circle" width="64" height="64" alt="{{ u.username }}">
+          <div class="flex-grow-1">
+            <div class="fw-bold">{{ u.username }}</div>
+            <div class="text-muted small">
+              ★ {{ u.estrellas|floatformat:1 }} ({{ u.total_estrellas }} reseña{{ u.total_estrellas|pluralize:",s" }})
+            </div>
+            <a href="{% url 'tienda:ver_perfil_usuario' u.id %}" class="btn btn-outline-primary btn-sm mt-2">Ver perfil</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-muted">Aún no hay calificaciones de vendedores.</div>
+    {% endfor %}
+  </div>
+{% endblock %}

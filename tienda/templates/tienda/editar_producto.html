@@ -1,5 +1,20 @@
 {% extends 'tienda/base.html' %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<style>
+    /* Leaflet fix for Bootstrap img max-width */
+    .leaflet-pane img, 
+    .leaflet-tile, 
+    .leaflet-marker-icon, 
+    .leaflet-marker-shadow {
+        max-width: none !important;
+        max-height: none !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
@@ -57,6 +72,37 @@
                         {% if form.precio.errors %}
                         <div class="text-danger small mt-1">{{ form.precio.errors.0 }}</div>
                         {% endif %}
+                    </div>
+                    
+                    <!-- Stock -->
+                    <div class="mb-3">
+                        <label for="{{ form.stock.id_for_label }}" class="form-label fw-bold">
+                            <i class="bi bi-box me-1"></i> Stock disponible
+                        </label>
+                        {{ form.stock }}
+                        {% if form.stock.errors %}
+                        <div class="text-danger small mt-1">{{ form.stock.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Ubicación -->
+                    <div class="mb-3">
+                        <label for="{{ form.ubicacion.id_for_label }}" class="form-label fw-bold">
+                            <i class="bi bi-geo-alt me-1"></i> Ubicación
+                        </label>
+                        {{ form.ubicacion }}
+                        {% if form.ubicacion.errors %}
+                        <div class="text-danger small mt-1">{{ form.ubicacion.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Mapa -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Ubicación exacta</label>
+                        <div id="map-edit" style="height: 250px; width: 100%; border-radius: 0.5rem; overflow: hidden; z-index: 1;"></div>
+                        <small class="text-muted mt-1 d-block">Haz clic en el mapa para actualizar la ubicación</small>
+                        {{ form.latitud }}
+                        {{ form.longitud }}
                     </div>
 
                     <!-- Imagen -->
@@ -165,25 +211,103 @@
 </style>
 
 <script>
-    // Vista previa de imagen
-    const inputImagen = document.getElementById('{{ form.imagen.id_for_label }}');
-    const previewContainer = document.getElementById('preview-container');
-    const previewImage = document.getElementById('preview-image');
+    document.addEventListener('DOMContentLoaded', function() {
+        // Vista previa de imagen
+        const imageInput = document.getElementById('{{ form.imagen.id_for_label }}');
+        const previewContainer = document.getElementById('preview-container');
+        const previewImage = document.getElementById('preview-image');
 
-    if (inputImagen) {
-        inputImagen.addEventListener('change', function (e) {
-            const file = e.target.files[0];
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function (event) {
-                    previewImage.src = event.target.result;
-                    previewContainer.classList.remove('d-none');
-                };
-                reader.readAsDataURL(file);
-            } else {
-                previewContainer.classList.add('d-none');
+        if (imageInput) {
+            imageInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImage.src = e.target.result;
+                        previewContainer.classList.remove('d-none');
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    previewContainer.classList.add('d-none');
+                }
+            });
+        }
+
+        // Leaflet Initialization
+        if (typeof L !== 'undefined' && document.getElementById('map-edit')) {
+            const latInput = document.getElementById('{{ form.latitud.id_for_label }}');
+            const lonInput = document.getElementById('{{ form.longitud.id_for_label }}');
+            
+            // Default to Argentina center if no coords
+            let initialLat = -34.6037;
+            let initialLon = -58.3816;
+            let zoom = 12;
+
+            // Check if we have saved coordinates
+            let hasSavedCoords = false;
+            if (latInput && latInput.value && lonInput && lonInput.value) {
+                const lat = parseFloat(latInput.value.replace(',', '.'));
+                const lon = parseFloat(lonInput.value.replace(',', '.'));
+                if (!isNaN(lat) && !isNaN(lon)) {
+                    initialLat = lat;
+                    initialLon = lon;
+                    zoom = 15;
+                    hasSavedCoords = true;
+                }
             }
-        });
-    }
+
+            var map = L.map('map-edit').setView([initialLat, initialLon], zoom);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            var marker;
+            if (hasSavedCoords) {
+                marker = L.marker([initialLat, initialLon]).addTo(map);
+            }
+
+            map.on('click', function(e) {
+                if (marker) {
+                    map.removeLayer(marker);
+                }
+                marker = L.marker(e.latlng).addTo(map);
+                if (latInput) latInput.value = e.latlng.lat;
+                if (lonInput) lonInput.value = e.latlng.lng;
+            });
+            
+            // Sync with Nominatim on blur
+            const ubicacionInput = document.getElementById('{{ form.ubicacion.id_for_label }}');
+            if (ubicacionInput) {
+                ubicacionInput.addEventListener('blur', function() {
+                    const query = this.value;
+                    if (query.length > 3) {
+                         fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data && data.length > 0) {
+                                    const lat = parseFloat(data[0].lat);
+                                    const lon = parseFloat(data[0].lon);
+                                    map.setView([lat, lon], 14);
+                                    
+                                    // If no marker yet, add one
+                                    if (!marker) {
+                                        marker = L.marker([lat, lon]).addTo(map);
+                                        if (latInput) latInput.value = lat;
+                                        if (lonInput) lonInput.value = lon;
+                                    }
+                                }
+                            })
+                            .catch(err => console.error("Nominatim error:", err));
+                    }
+                });
+            }
+            
+            // Force map resize check to prevent gray areas
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 500);
+        }
+    });
 </script>
 {% endblock %}

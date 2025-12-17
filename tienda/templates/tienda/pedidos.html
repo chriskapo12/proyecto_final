@@ -37,31 +37,39 @@
                             {% endif %}
                         </div>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <h6 class="text-muted mb-2">Productos:</h6>
-                                <ul class="list-unstyled mb-3">
-                                    {% for item in pedido.items.all %}
-                                    <li class="mb-2">
-                                        <i class="bi bi-box text-muted"></i>
-                                        <strong>{{ item.nombre_producto }}</strong> x{{ item.cantidad }}
-                                        <span class="text-muted">- ${{ item.precio_unitario }} c/u</span>
-                                    </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                            <div class="col-md-4 text-md-end">
-                                <h6 class="text-muted mb-2">Total:</h6>
-                                <h3 class="text-success mb-3">${{ pedido.total }}</h3>
-                                <a href="{% url 'tienda:detalle_pedido' pedido.id %}" class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-eye"></i> Ver detalles
-                                </a>
-                            </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6 class="text-muted mb-2">Productos:</h6>
+                            <ul class="list-unstyled mb-3">
+                                {% for item in pedido.items.all %}
+                                <li class="mb-2">
+                                    <i class="bi bi-box text-muted"></i>
+                                    <strong>{{ item.nombre_producto }}</strong> x{{ item.cantidad }}
+                                    <span class="text-muted">- ${{ item.precio_unitario }} c/u</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <h6 class="text-muted mb-2">Total:</h6>
+                            <h3 class="text-success mb-3">${{ pedido.total }}</h3>
+                            <a href="{% url 'tienda:detalle_pedido' pedido.id %}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-eye"></i> Ver detalles
+                            </a>
+                            {% if pedido.estado != 'entregado' and pedido.estado != 'cancelado' %}
+                            <form method="post" action="{% url 'tienda:confirmar_recepcion' pedido.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm ms-1">
+                                    <i class="bi bi-check-circle"></i> Confirmar recepción
+                                </button>
+                            </form>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
             {% endfor %}
         </div>
     {% else %}

@@ -9,39 +9,44 @@ import mercadopago
 from django.conf import settings
 from django.db.models import Avg, Count, Q
 
-from .models import Producto, Carrito, CarritoItem, Favorito, Resena, Pedido, ItemPedido
+from .models import Producto, Carrito, CarritoItem, Favorito, Resena, Pedido, ItemPedido, Cupon, Pregunta, Respuesta
 from .forms import ProductoForm
 from django.core.paginator import Paginator, EmptyPage
 
 # 🏠 Página principal
 def home(request):
     categoria = request.GET.get('categoria')
-    categorias = [
-        ('licor', 'Licor'),
-        ('energizante', 'Energizante'),
-        ('cerveza', 'Cerveza'),
-        ('vino', 'Vino'),
-    ]
+    categorias = Producto.CATEGORIAS
     productos_qs = Producto.objects.all().order_by('-id')
-    if categoria in dict(categorias):
+    if categoria and categoria in dict(categorias):
         productos_qs = productos_qs.filter(categoria=categoria)
     
     # Agregar información de favoritos si el usuario está autenticado
     if request.user.is_authenticated:
         productos_qs = productos_qs.annotate(
             es_favorito=Count('favoritos', filter=Q(favoritos__usuario=request.user)),
-            promedio_calificacion=Avg('resenas__calificacion')
+            promedio_calificacion=Avg('resenas__calificacion'),
+            vendedor_estrellas=Avg('usuario__resenas_recibidas__calificacion'),
+            vendedor_total=Count('usuario__resenas_recibidas')
         )
     else:
         productos_qs = productos_qs.annotate(
-            promedio_calificacion=Avg('resenas__calificacion')
+            promedio_calificacion=Avg('resenas__calificacion'),
+            vendedor_estrellas=Avg('usuario__resenas_recibidas__calificacion'),
+            vendedor_total=Count('usuario__resenas_recibidas')
         )
     
     ultimos_productos = productos_qs[:8]
+    populares = Producto.objects.annotate(
+        fav_count=Count('favoritos'),
+        vendedor_estrellas=Avg('usuario__resenas_recibidas__calificacion'),
+        vendedor_total=Count('usuario__resenas_recibidas')
+    ).order_by('-fav_count', '-id')[:8]
     return render(request, 'tienda/home.html', {
         'ultimos_productos': ultimos_productos,
         'categorias': categorias,
         'categoria_seleccionada': categoria,
+        'populares': populares,
     })
 
 # 🧍 Registro de usuario
@@ -133,19 +138,18 @@ def productos_view(request):
     if request.user.is_authenticated:
         productos = productos.annotate(
             es_favorito=Count('favoritos', filter=Q(favoritos__usuario=request.user)),
-            promedio_calificacion=Avg('resenas__calificacion')
+            promedio_calificacion=Avg('resenas__calificacion'),
+            vendedor_estrellas=Avg('usuario__resenas_recibidas__calificacion'),
+            vendedor_total=Count('usuario__resenas_recibidas')
         )
     else:
         productos = productos.annotate(
-            promedio_calificacion=Avg('resenas__calificacion')
+            promedio_calificacion=Avg('resenas__calificacion'),
+            vendedor_estrellas=Avg('usuario__resenas_recibidas__calificacion'),
+            vendedor_total=Count('usuario__resenas_recibidas')
         )
     
-    categorias = [
-        ('licor', 'Licor'),
-        ('energizante', 'Energizante'),
-        ('cerveza', 'Cerveza'),
-        ('vino', 'Vino'),
-    ]
+    categorias = Producto.CATEGORIAS
     
     return render(request, 'tienda/productos.html', {
         'productos': productos,
@@ -166,6 +170,23 @@ def detalle_producto_view(request, producto_id):
     promedio_calificacion = resenas.aggregate(Avg('calificacion'))['calificacion__avg']
     total_resenas = resenas.count()
     
+    # Reputación del vendedor (promedio de calificaciones de todos sus productos)
+    from .models import Resena
+    vendedor_resenas = Resena.objects.filter(producto__usuario=producto.usuario)
+    reputacion_vendedor = vendedor_resenas.aggregate(Avg('calificacion'))['calificacion__avg']
+    total_resenas_vendedor = vendedor_resenas.count()
+
+    # Productos similares (misma categoría y precio cercano)
+    similares = Producto.objects.filter(categoria=producto.categoria).exclude(id=producto.id)
+    try:
+        rango_min = float(producto.precio) * 0.8
+        rango_max = float(producto.precio) * 1.2
+        similares = similares.filter(precio__gte=rango_min, precio__lte=rango_max)
+    except Exception:
+        pass
+    similares = similares.order_by('-id')[:8]
+    preguntas = producto.preguntas.select_related('usuario').order_by('-fecha_creacion')
+    
     # Verificar si el usuario ya reseñó este producto
     resena_usuario = None
     es_favorito = False
@@ -173,6 +194,14 @@ def detalle_producto_view(request, producto_id):
         resena_usuario = resenas.filter(usuario=request.user).first()
         es_favorito = Favorito.objects.filter(usuario=request.user, producto=producto).exists()
     
+    # Verificación de email del vendedor (django-allauth)
+    email_verificado = False
+    try:
+        from allauth.account.models import EmailAddress
+        email_verificado = EmailAddress.objects.filter(user=producto.usuario, verified=True).exists()
+    except Exception:
+        email_verificado = False
+
     return render(request, 'tienda/detalle_producto.html', {
         'producto': producto,
         'resenas': resenas,
@@ -180,6 +209,12 @@ def detalle_producto_view(request, producto_id):
         'total_resenas': total_resenas,
         'resena_usuario': resena_usuario,
         'es_favorito': es_favorito,
+        'email_verificado': email_verificado,
+        'reputacion_vendedor': reputacion_vendedor,
+        'total_resenas_vendedor': total_resenas_vendedor,
+        'similares': similares,
+        'preguntas': preguntas,
+        'categoria_label': producto.get_categoria_display(),
     })
 
 # ➕ Agregar producto (solo usuarios registrados)
@@ -194,7 +229,9 @@ def agregar_producto_view(request):
             return redirect('tienda:productos')
     else:
         form = ProductoForm()
-    return render(request, 'tienda/agregar_producto.html', {'form': form})
+    return render(request, 'tienda/agregar_producto.html', {
+        'form': form,
+    })
 
 # ✏️ Editar producto (solo dueño)
 @login_required
@@ -215,7 +252,10 @@ def editar_producto_view(request, producto_id):
     else:
         form = ProductoForm(instance=producto)
     
-    return render(request, 'tienda/editar_producto.html', {'form': form, 'producto': producto})
+    return render(request, 'tienda/editar_producto.html', {
+        'form': form,
+        'producto': producto,
+    })
 
 # ❌ Eliminar producto (solo dueño)
 @login_required
@@ -234,8 +274,20 @@ def agregar_al_carrito(request, producto_id):
     carrito, _ = Carrito.objects.get_or_create(usuario=request.user)
     item, creado = CarritoItem.objects.get_or_create(carrito=carrito, producto=producto)
 
-    if not creado:
-        item.cantidad += 1
+    # Validar stock antes de agregar
+    if producto.stock <= 0 and creado:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': 'Sin stock disponible'})
+        messages.error(request, 'Sin stock disponible')
+        return redirect('tienda:ver_carrito')
+    else:
+        nueva_cantidad = 1 if creado else item.cantidad + 1
+        if nueva_cantidad > producto.stock:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'message': 'No puedes superar el stock disponible'})
+            messages.error(request, 'No puedes superar el stock disponible')
+            return redirect('tienda:ver_carrito')
+        item.cantidad = nueva_cantidad
         item.save()
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -336,6 +388,10 @@ def procesar_pago(request):
         nombre = request.POST.get('nombre', '').strip()
         email = request.POST.get('email', request.user.email)
         metodo_pago = request.POST.get('metodo_pago', 'mercadopago')
+        direccion = request.POST.get('direccion', '').strip()
+        telefono = request.POST.get('telefono', '').strip()
+        shipping_method = request.POST.get('shipping_method', 'retiro')
+        cupon_code = request.POST.get('cupon', '').strip().upper()
 
         print(f"[DEBUG] Datos recibidos: nombre={nombre}, email={email}, metodo={metodo_pago}")
 
@@ -345,22 +401,59 @@ def procesar_pago(request):
 
         print(f"[DEBUG] Nombre validado: {nombre}")
 
+        # Validación de seguridad: requerir datos de envío antes de pagar
+        if not direccion or not telefono:
+            messages.error(request, 'Debes completar dirección y teléfono de envío antes de pagar.')
+            return render(request, 'tienda/pago.html', {'items': items, 'total': total})
+        shipping_cost = 0
+        if shipping_method == 'estandar':
+            shipping_cost = 1500
+        elif shipping_method == 'express':
+            shipping_cost = 3000
+        elif shipping_method == 'retiro':
+            shipping_cost = 0
+        discount_pct = 0
+        cupon_obj = None
+        if cupon_code:
+            cupon_obj = Cupon.objects.filter(codigo=cupon_code, activo=True).first()
+            if cupon_obj:
+                discount_pct = cupon_obj.porcentaje
+
+        # Guardar datos de envío en sesión para usarlos tras el callback de pago
+        request.session['shipping'] = {'nombre': nombre, 'email': email, 'direccion': direccion, 'telefono': telefono, 'shipping_method': shipping_method, 'cupon': cupon_code}
+
         if metodo_pago == 'mercadopago':
             print("[DEBUG] Procesando pago con Mercado Pago...")
 
             # Crear preferencia de pago para Mercado Pago
+            def apply_discount(price, pct):
+                try:
+                    return round(float(price) * (100 - int(pct)) / 100, 2)
+                except Exception:
+                    return float(price)
+            discounted_items = [
+                {
+                    "title": item.producto.nombre,
+                    "quantity": item.cantidad,
+                    "unit_price": apply_discount(item.producto.precio, discount_pct),
+                }
+                for item in items
+            ]
             preference_data = {
                 "items": [
-                    {
-                        "title": item.producto.nombre,
-                        "quantity": item.cantidad,
-                        "unit_price": float(item.producto.precio),
-                    }
-                    for item in items
+                    *discounted_items,
+                    {"title": "Envío", "quantity": 1, "unit_price": float(shipping_cost)} if shipping_cost > 0 else None,
                 ],
+                "items": [i for i in preference_data["items"] if i],
                 "payer": {
                     "name": nombre,
                     "email": email,
+                },
+                "metadata": {
+                    "direccion": direccion,
+                    "telefono": telefono,
+                    "shipping_method": shipping_method,
+                    "cupon": cupon_code
                 },
                 "back_urls": {
                     "success": settings.MERCADOPAGO_SUCCESS_URL,
@@ -404,9 +497,10 @@ def procesar_pago(request):
             # Método de pago simulado (tarjeta de crédito local)
             
             # Crear pedido
+            discounted_total = sum(item.cantidad * apply_discount(item.producto.precio, discount_pct) for item in items) + shipping_cost
             pedido = Pedido.objects.create(
                 usuario=request.user,
-                total=total,
+                total=discounted_total,
                 estado='procesando',
                 metodo_pago='tarjeta_local',
                 nombre_completo=nombre,
@@ -421,9 +515,13 @@ def procesar_pago(request):
                     pedido=pedido,
                     producto=item.producto,
                     nombre_producto=item.producto.nombre,
-                    precio_unitario=item.producto.precio,
+                    precio_unitario=apply_discount(item.producto.precio, discount_pct),
                     cantidad=item.cantidad,
                 )
+            # Descontar stock
+            if item.producto and item.producto.stock is not None:
+                item.producto.stock = max(0, item.producto.stock - item.cantidad)
+                item.producto.save()
             
             # Limpiamos el carrito
             carrito.items.all().delete()
@@ -447,19 +545,42 @@ def pago_exitoso(request):
         # Calcular total
         items = list(carrito.items.select_related('producto').all())
         total = sum(item.cantidad * item.producto.precio for item in items)
+        shipping = request.session.get('shipping', {})
+        shipping_method = shipping.get('shipping_method', 'retiro')
+        cupon_code = shipping.get('cupon')
+        shipping_cost = 0
+        if shipping_method == 'estandar':
+            shipping_cost = 1500
+        elif shipping_method == 'express':
+            shipping_cost = 3000
+        discount_pct = 0
+        if cupon_code:
+            cupon_obj = Cupon.objects.filter(codigo=cupon_code, activo=True).first()
+            if cupon_obj:
+                discount_pct = cupon_obj.porcentaje
         
         # Obtener parámetros de Mercado Pago
         payment_id = request.GET.get('payment_id')
         preference_id = request.GET.get('preference_id')
         
+        # Leer datos de envío guardados previamente
+        shipping = request.session.get('shipping', {})
         # Crear pedido
+        def apply_discount(price, pct):
+            try:
+                return round(float(price) * (100 - int(pct)) / 100, 2)
+            except Exception:
+                return float(price)
+        discounted_total = sum(item.cantidad * apply_discount(item.producto.precio, discount_pct) for item in items) + shipping_cost
         pedido = Pedido.objects.create(
             usuario=request.user,
-            total=total,
+            total=discounted_total,
             estado='procesando',
             metodo_pago='mercadopago',
-            nombre_completo=request.user.get_full_name() or request.user.username,
-            email=request.user.email,
+            nombre_completo=shipping.get('nombre') or request.user.get_full_name() or request.user.username,
+            email=shipping.get('email') or request.user.email,
+            direccion=shipping.get('direccion', ''),
+            telefono=shipping.get('telefono', ''),
             payment_id=payment_id,
             preference_id=preference_id,
         )
@@ -470,12 +591,20 @@ def pago_exitoso(request):
                 pedido=pedido,
                 producto=item.producto,
                 nombre_producto=item.producto.nombre,
-                precio_unitario=item.producto.precio,
+                precio_unitario=apply_discount(item.producto.precio, discount_pct),
                 cantidad=item.cantidad,
             )
+        # Descontar stock
+        if item.producto and item.producto.stock is not None:
+            item.producto.stock = max(0, item.producto.stock - item.cantidad)
+            item.producto.save()
         
-        # Limpiar carrito
+        # Limpiar carrito y datos de envío en sesión
         carrito.items.all().delete()
+        try:
+            del request.session['shipping']
+        except KeyError:
+            pass
         
         return render(request, 'tienda/pago_exitoso.html', {'pedido': pedido})
     
@@ -493,32 +622,197 @@ def pago_fallido(request):
 def pago_pendiente(request):
     return render(request, 'tienda/pago_pendiente.html')
 
+from django.views.decorators.csrf import csrf_exempt
+@csrf_exempt
+def mercadopago_webhook(request):
+    """Webhook para recibir notificaciones de Mercado Pago y actualizar el estado del pedido."""
+    try:
+        if request.method == 'POST':
+            try:
+                payload = json.loads(request.body.decode('utf-8'))
+            except Exception:
+                payload = {}
+            payment_id = request.GET.get('id') or payload.get('id') or payload.get('data', {}).get('id')
+            topic = request.GET.get('topic') or payload.get('type') or payload.get('topic')
+            status = payload.get('data', {}).get('status') or payload.get('status')
+            preference_id = payload.get('data', {}).get('preference_id') or payload.get('preference_id')
+            # Intentar actualizar el pedido usando preference_id o payment_id
+            pedido = None
+            if preference_id:
+                pedido = Pedido.objects.filter(preference_id=preference_id).first()
+            if not pedido and payment_id:
+                pedido = Pedido.objects.filter(payment_id=payment_id).first()
+            if pedido:
+                if status in ('approved', 'accredited'):
+                    pedido.estado = 'procesando'
+                elif status in ('pending', 'in_process'):
+                    pedido.estado = 'pendiente'
+                elif status in ('cancelled', 'rejected'):
+                    pedido.estado = 'cancelado'
+                pedido.save()
+            return JsonResponse({'ok': True})
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=400)
+    return JsonResponse({'ok': True})
+@login_required
+def confirmar_recepcion(request, pedido_id):
+    """El comprador confirma la recepción: marcamos el pedido como entregado y notificamos al vendedor."""
+    from django.urls import reverse
+    pedido = get_object_or_404(Pedido, id=pedido_id, usuario=request.user)
+    if request.method == 'POST':
+        pedido.estado = 'entregado'
+        pedido.save()
+        # Notificar a cada vendedor involucrado
+        for item in pedido.items.select_related('producto'):
+            if item.producto and item.producto.usuario:
+                try:
+                    Notificacion.objects.create(
+                        usuario=item.producto.usuario,
+                        tipo='venta',
+                        mensaje=f'El comprador confirmó la recepción del pedido #{pedido.id}.',
+                        link=reverse('tienda:detalle_pedido', args=[pedido.id])
+                    )
+                except Exception:
+                    pass
+        messages.success(request, 'Recepción confirmada. El vendedor fue notificado.')
+        return redirect('tienda:detalle_pedido', pedido_id=pedido.id)
+    return redirect('tienda:detalle_pedido', pedido_id=pedido.id)
+
+def garantia(request):
+    return render(request, 'tienda/garantia.html')
+
+def _haversine(lat1, lon1, lat2, lon2):
+    from math import radians, sin, cos, sqrt, atan2
+    R = 6371.0
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1-a))
+    return R * c
+
+def productos_cerca_view(request):
+    categorias = Producto.CATEGORIAS
+    return render(request, 'tienda/cerca.html', {'categorias': categorias})
+
+def productos_cerca_api(request):
+    try:
+        lat = float(request.GET.get('lat'))
+        lon = float(request.GET.get('lon'))
+    except Exception:
+        return JsonResponse({'error': 'Ubicación inválida'}, status=400)
+    try:
+        radius = float(request.GET.get('radius', 10))
+    except Exception:
+        radius = 10.0
+    qs = Producto.objects.exclude(latitud__isnull=True).exclude(longitud__isnull=True)
+    items = []
+    for p in qs:
+        d = _haversine(lat, lon, p.latitud, p.longitud)
+        if d <= radius:
+            items.append({
+                'id': p.id,
+                'nombre': p.nombre,
+                'precio': float(p.precio),
+                'imagen': p.imagen.url if p.imagen else None,
+                'categoria': p.get_categoria_display(),
+                'distancia_km': round(d, 2),
+                'ubicacion': p.ubicacion,
+                'usuario_id': p.usuario_id,
+                'usuario_nombre': p.usuario.username,
+                'latitud': p.latitud,
+                'longitud': p.longitud,
+            })
+    items.sort(key=lambda x: x['distancia_km'])
+    return JsonResponse({'products': items})
 
 # API: productos paginados (JSON)
 def productos_api(request):
-    categoria = request.GET.get('categoria')
+    categoria = request.GET.get('categoria', '').strip()
+    q = request.GET.get('q', '').strip()
+    precio_min = request.GET.get('precio_min', '').strip()
+    precio_max = request.GET.get('precio_max', '').strip()
+    orden = request.GET.get('orden', 'recientes').strip()
     try:
         page = int(request.GET.get('page', 1))
     except ValueError:
         page = 1
     try:
-        page_size = int(request.GET.get('page_size', 8))
+        page_size = int(request.GET.get('page_size', 12))
     except ValueError:
-        page_size = 8
-
-    categorias = dict([('licor', 'Licor'), ('energizante', 'Energizante'), ('cerveza', 'Cerveza'), ('vino', 'Vino')])
-    productos_qs = Producto.objects.all().order_by('-id')
+        page_size = 12
+    categorias = dict(Producto.CATEGORIAS)
+    productos_qs = Producto.objects.all()
+    if q:
+        productos_qs = productos_qs.filter(
+            Q(nombre__icontains=q) | Q(descripcion__icontains=q) | Q(categoria__icontains=q)
+        )
     if categoria in categorias:
         productos_qs = productos_qs.filter(categoria=categoria)
-
+    if precio_min:
+        try:
+            productos_qs = productos_qs.filter(precio__gte=float(precio_min))
+        except ValueError:
+            pass
+    if precio_max:
+        try:
+            productos_qs = productos_qs.filter(precio__lte=float(precio_max))
+        except ValueError:
+            pass
+    if orden == 'precio_asc':
+        productos_qs = productos_qs.order_by('precio')
+    elif orden == 'precio_desc':
+        productos_qs = productos_qs.order_by('-precio')
+    elif orden == 'nombre':
+        productos_qs = productos_qs.order_by('nombre')
+    elif orden == 'antiguos':
+        productos_qs = productos_qs.order_by('id')
+    else:
+        productos_qs = productos_qs.order_by('-id')
+    if request.user.is_authenticated:
+        productos_qs = productos_qs.annotate(
+            es_favorito=Count('favoritos', filter=Q(favoritos__usuario=request.user)),
+            promedio_calificacion=Avg('resenas__calificacion')
+        )
+    else:
+        productos_qs = productos_qs.annotate(
+            promedio_calificacion=Avg('resenas__calificacion')
+        )
     paginator = Paginator(productos_qs, page_size)
     try:
         page_obj = paginator.page(page)
     except EmptyPage:
-        return JsonResponse({'products': [], 'has_next': False})
-
+        return JsonResponse({'products': [], 'has_next': False, 'page': page})
     productos = []
+    email_verificado_cache = {}
+    try:
+        from allauth.account.models import EmailAddress
+        email_model = EmailAddress
+    except Exception:
+        email_model = None
     for p in page_obj.object_list:
+        verificado = False
+        if email_model:
+            uid = p.usuario_id
+            if uid in email_verificado_cache:
+                verificado = email_verificado_cache[uid]
+            else:
+                verificado = email_model.objects.filter(user_id=uid, verified=True).exists()
+                email_verificado_cache[uid] = verificado
+        # Vendor rating cache
+        from .models import ResenaVendedor
+        vendor_stats_cache = locals().get('vendor_stats_cache', {})
+        if 'vendor_stats_cache' not in locals():
+            vendor_stats_cache = {}
+        estrellas = None
+        total_estrellas = 0
+        uid = p.usuario_id
+        if uid in vendor_stats_cache:
+            estrellas, total_estrellas = vendor_stats_cache[uid]
+        else:
+            agg = ResenaVendedor.objects.filter(vendedor_id=uid).aggregate(avg=Avg('calificacion'), total=Count('id'))
+            estrellas = agg.get('avg')
+            total_estrellas = agg.get('total') or 0
+            vendor_stats_cache[uid] = (estrellas, total_estrellas)
         productos.append({
             'id': p.id,
             'nombre': p.nombre,
@@ -528,8 +822,15 @@ def productos_api(request):
             'categoria': p.get_categoria_display(),
             'usuario_id': p.usuario.id,
             'usuario_nombre': p.usuario.username,
+            'stock': p.stock,
+            'promedio_calificacion': float(p.promedio_calificacion) if p.promedio_calificacion else None,
+            'es_favorito': bool(getattr(p, 'es_favorito', 0)),
+            'email_verificado': verificado,
+            'vendedor_estrellas': float(estrellas) if estrellas is not None else None,
+            'vendedor_total': int(total_estrellas),
+            'latitud': p.latitud,
+            'longitud': p.longitud,
         })
-
     return JsonResponse({
         'products': productos,
         'has_next': page_obj.has_next(),
@@ -686,6 +987,29 @@ def obtener_usuarios_disponibles(request):
     usuarios = User.objects.exclude(id=request.user.id).values('id', 'username')
     return JsonResponse({'usuarios': list(usuarios)})
 
+@login_required
+def agregar_pregunta(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id)
+    if request.method == 'POST':
+        contenido = request.POST.get('contenido', '').strip()
+        if contenido and request.user != producto.usuario:
+            Pregunta.objects.create(producto=producto, usuario=request.user, contenido=contenido)
+        return redirect('tienda:detalle_producto', producto_id=producto_id)
+    return redirect('tienda:detalle_producto', producto_id=producto_id)
+
+@login_required
+def responder_pregunta(request, pregunta_id):
+    pregunta = get_object_or_404(Pregunta, id=pregunta_id)
+    producto = pregunta.producto
+    if request.user != producto.usuario:
+        return redirect('tienda:detalle_producto', producto_id=producto.id)
+    if request.method == 'POST':
+        contenido = request.POST.get('contenido', '').strip()
+        if contenido:
+            Respuesta.objects.update_or_create(pregunta=pregunta, defaults={'usuario': request.user, 'contenido': contenido})
+        return redirect('tienda:detalle_producto', producto_id=producto.id)
+    return redirect('tienda:detalle_producto', producto_id=producto.id)
+
 
 # 👤 Perfil de Usuario
 @login_required
@@ -698,9 +1022,18 @@ def mi_perfil(request):
     # Obtener productos del usuario
     mis_productos = Producto.objects.filter(usuario=request.user).order_by('-id')
     
+    # Verificación de email (django-allauth)
+    email_verificado = False
+    try:
+        from allauth.account.models import EmailAddress
+        email_verificado = EmailAddress.objects.filter(user=request.user, verified=True).exists()
+    except Exception:
+        email_verificado = False
+
     return render(request, 'tienda/mi_perfil.html', {
         'perfil': perfil,
         'mis_productos': mis_productos,
+        'email_verificado': email_verificado,
     })
 
 
@@ -713,12 +1046,84 @@ def ver_perfil_usuario(request, usuario_id):
     # Obtener productos del usuario
     productos = Producto.objects.filter(usuario=usuario).order_by('-id')
     
+    # Verificación de email del usuario (django-allauth)
+    email_verificado = False
+    try:
+        from allauth.account.models import EmailAddress
+        email_verificado = EmailAddress.objects.filter(user=usuario, verified=True).exists()
+    except Exception:
+        email_verificado = False
+    
+    from .models import ResenaVendedor
+    vendor_qs = ResenaVendedor.objects.filter(vendedor=usuario)
+    vendor_stats = vendor_qs.aggregate(avg=Avg('calificacion'), total=Count('id'))
+    reputacion_vendedor = vendor_stats.get('avg')
+    total_resenas_vendedor = vendor_stats.get('total')
+    dist_raw = list(vendor_qs.values('calificacion').annotate(c=Count('id')))
+    histograma = {i: 0 for i in range(1, 6)}
+    for r in dist_raw:
+        histograma[int(r['calificacion'])] = int(r['c'])
+    total = total_resenas_vendedor or 0
+    histograma_pct = {k: (int(round(v * 100 / total)) if total > 0 else 0) for k, v in histograma.items()}
+    histograma_items = [(s, histograma.get(s, 0), histograma_pct.get(s, 0)) for s in [5, 4, 3, 2, 1]]
+    badges = []
+    if reputacion_vendedor and total_resenas_vendedor:
+        if reputacion_vendedor >= 4.5 and total_resenas_vendedor >= 10:
+            badges.append('Excelente reputación')
+        elif reputacion_vendedor >= 4.0 and total_resenas_vendedor >= 5:
+            badges.append('Confiable')
+        if total_resenas_vendedor < 3:
+            badges.append('Nuevo vendedor')
+    if productos.count() >= 10:
+        badges.append('Vendedor activo')
+    resena_actual = None
+    if request.user.is_authenticated and request.user != usuario:
+        resena_actual = ResenaVendedor.objects.filter(vendedor=usuario, usuario=request.user).first()
+
     return render(request, 'tienda/perfil_usuario.html', {
         'perfil': perfil,
         'usuario_perfil': usuario,
         'productos': productos,
+        'email_verificado': email_verificado,
+        'reputacion_vendedor': reputacion_vendedor,
+        'total_resenas_vendedor': total_resenas_vendedor,
+        'resena_actual': resena_actual,
+        'histograma': histograma,
+        'histograma_items': histograma_items,
+        'badges': badges,
     })
 
+@login_required
+def calificar_vendedor(request, usuario_id):
+    vendedor = get_object_or_404(User, id=usuario_id)
+    if request.user == vendedor:
+        return redirect('tienda:ver_perfil_usuario', usuario_id=usuario_id)
+    from .models import ResenaVendedor
+    if request.method == 'POST':
+        cal = request.POST.get('calificacion')
+        comentario = request.POST.get('comentario', '')
+        try:
+            cal = int(cal)
+            if cal < 1 or cal > 5:
+                raise ValueError()
+        except Exception:
+            messages.error(request, 'Selecciona una calificación válida.')
+            return redirect('tienda:ver_perfil_usuario', usuario_id=usuario_id)
+        obj, created = ResenaVendedor.objects.update_or_create(
+            vendedor=vendedor, usuario=request.user,
+            defaults={'calificacion': cal, 'comentario': comentario}
+        )
+        messages.success(request, 'Calificación registrada.')
+    return redirect('tienda:ver_perfil_usuario', usuario_id=usuario_id)
+
+def vendedores_destacados_view(request):
+    from django.db.models import Avg, Count
+    from .models import ResenaVendedor
+    users = User.objects.annotate(
+        estrellas=Avg('resenas_recibidas__calificacion'),
+        total_estrellas=Count('resenas_recibidas')
+    ).filter(total_estrellas__gt=0).order_by('-estrellas', '-total_estrellas')
+    return render(request, 'tienda/vendedores_destacados.html', {'usuarios': users})
 
 @login_required
 def editar_perfil(request):

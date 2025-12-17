@@ -1,6 +1,6 @@
 {% extends 'tienda/base.html' %}
 
-{% block title %}Perfil de {{ usuario_perfil.username }} - Bebidas Oeste{% endblock %}
+{% block title %}Perfil de {{ usuario_perfil.username }} - LinkOeste{% endblock %}
 
 {% block content %}
 <style>
@@ -182,7 +182,20 @@
         {% endif %}
 
         <div class="perfil-info">
-            <div class="perfil-username">{{ usuario_perfil.username }}</div>
+            <div class="perfil-username">
+                {{ usuario_perfil.username }}
+                {% if email_verificado %}
+                <span class="badge bg-success ms-2"><i class="bi bi-shield-check"></i> Verificado</span>
+                {% endif %}
+                {% if reputacion_vendedor %}
+                <span class="badge bg-warning text-dark ms-2">★ {{ reputacion_vendedor|floatformat:1 }} ({{ total_resenas_vendedor }})</span>
+                {% endif %}
+                {% if badges %}
+                {% for b in badges %}
+                <span class="badge bg-primary ms-2">{{ b }}</span>
+                {% endfor %}
+                {% endif %}
+            </div>
             {% if perfil.bio %}
             <div class="perfil-bio">{{ perfil.bio }}</div>
             {% else %}
@@ -199,6 +212,22 @@
                     <span class="stat-label">Miembro desde</span>
                 </div>
             </div>
+            {% if histograma_items %}
+            <div class="mt-3">
+                <div class="section-title" style="font-size:1rem; margin-bottom:8px;">Calificaciones recibidas</div>
+                <div class="d-flex flex-column gap-2">
+                    {% for star, count, pct in histograma_items %}
+                    <div class="d-flex align-items-center gap-2">
+                        <div style="width:80px;">{{ star }} ★</div>
+                        <div class="progress flex-grow-1" style="height:10px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ pct }}%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div style="width:40px;" class="text-muted small">{{ count }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -207,6 +236,48 @@
         <div class="section-title">
             📦 Productos de {{ usuario_perfil.username }}
         </div>
+
+        {% if user.is_authenticated and user != usuario_perfil %}
+        <form method="post" action="{% url 'tienda:calificar_vendedor' usuario_perfil.id %}" class="mb-3">
+            {% csrf_token %}
+            <input type="hidden" name="calificacion" id="rating-value" value="{{ resena_actual.calificacion|default:'' }}">
+            <div class="d-flex flex-column gap-2">
+                <div class="d-flex align-items-center gap-1" id="rating-stars">
+                    <button type="button" class="btn btn-link p-0 fs-4 text-warning" data-val="1">★</button>
+                    <button type="button" class="btn btn-link p-0 fs-4 text-warning" data-val="2">★</button>
+                    <button type="button" class="btn btn-link p-0 fs-4 text-warning" data-val="3">★</button>
+                    <button type="button" class="btn btn-link p-0 fs-4 text-warning" data-val="4">★</button>
+                    <button type="button" class="btn btn-link p-0 fs-4 text-warning" data-val="5">★</button>
+                    <span class="ms-2 small text-muted" id="rating-label"></span>
+                </div>
+                <textarea name="comentario" class="form-control" rows="2" placeholder="Dejá un comentario (opcional)">{{ resena_actual.comentario|default:'' }}</textarea>
+                <div class="d-flex">
+                    <button type="submit" class="btn btn-warning text-white ms-auto">Calificar vendedor</button>
+                </div>
+            </div>
+        </form>
+        <script>
+            (function() {
+                const valueEl = document.getElementById('rating-value');
+                const label = document.getElementById('rating-label');
+                const stars = Array.from(document.querySelectorAll('#rating-stars [data-val]'));
+                function render() {
+                    const v = parseInt(valueEl.value || '0', 10);
+                    stars.forEach(s => {
+                        const n = parseInt(s.dataset.val, 10);
+                        s.classList.toggle('text-warning', n <= v);
+                        s.classList.toggle('text-secondary', n > v);
+                    });
+                    label.textContent = v ? v + ' / 5' : 'Selecciona estrellas';
+                }
+                stars.forEach(s => s.addEventListener('click', () => {
+                    valueEl.value = s.dataset.val;
+                    render();
+                }));
+                render();
+            })();
+        </script>
+        {% endif %}
 
         {% if productos %}
         <div class="productos-grid">

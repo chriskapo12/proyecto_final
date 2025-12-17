@@ -216,6 +216,9 @@ ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False
 # ==================== CONFIGURACIÓN DE MERCADO PAGO ====================
 MERCADOPAGO_ACCESS_TOKEN = 'APP_USR-6648621459860687-111112-6525bfe39eb274aa4986f608cece6d9a-2981232220'
 
+# ==================== GOOGLE MAPS ====================
+GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')
+
 # URL de retorno después del pago
 MERCADOPAGO_SUCCESS_URL = 'https://marketplace-django-z29l.onrender.com/pago-exitoso/'
 MERCADOPAGO_FAILURE_URL = 'https://marketplace-django-z29l.onrender.com/pago-fallido/'

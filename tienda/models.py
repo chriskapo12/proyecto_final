@@ -34,10 +34,25 @@ def guardar_perfil_usuario(sender, instance, **kwargs):
 class Producto(models.Model):
 
     CATEGORIAS = [
+        ('vino', 'Vino'),
+        ('cerveza', 'Cerveza'),
         ('licor', 'Licor'),
         ('energizante', 'Energizante'),
-        ('cerveza', 'Cerveza'),
-        ('vino', 'Vino'),
+        ('blanca', 'Bebidas Blancas'),
+        ('snack', 'Snacks'),
+        ('golosina', 'Golosinas'),
+        ('limpieza', 'Limpieza'),
+        ('hogar', 'Hogar'),
+        ('electronica', 'Electrónica'),
+        ('ropa', 'Ropa'),
+        ('calzado', 'Calzado'),
+        ('perfumeria', 'Perfumería'),
+        ('mascotas', 'Mascotas'),
+        ('libros', 'Libros'),
+        ('herramientas', 'Herramientas'),
+        ('juguetes', 'Juguetes'),
+        ('gaming', 'Gaming'),
+        ('otros', 'Otros'),
     ]
 
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)  # quién lo publicó
@@ -47,7 +62,10 @@ class Producto(models.Model):
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     categoria = models.CharField(max_length=20, choices=CATEGORIAS, default='licor')
     ubicacion = models.CharField(max_length=100, blank=True, help_text="Ej: Palermo, Buenos Aires")
+    latitud = models.FloatField(blank=True, null=True)
+    longitud = models.FloatField(blank=True, null=True)
     fecha_publicacion = models.DateTimeField(auto_now_add=True, null=True)
+    stock = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.nombre
@@ -196,3 +214,40 @@ class Notificacion(models.Model):
     def __str__(self):
         return f"{self.get_tipo_display()} para {self.usuario.username}"
 
+class Cupon(models.Model):
+    codigo = models.CharField(max_length=50, unique=True)
+    porcentaje = models.PositiveIntegerField(default=0)
+    activo = models.BooleanField(default=True)
+    fecha_inicio = models.DateTimeField(blank=True, null=True)
+    fecha_fin = models.DateTimeField(blank=True, null=True)
+    def __str__(self):
+        return self.codigo
+
+class Pregunta(models.Model):
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='preguntas')
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    contenido = models.TextField(max_length=300)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return self.contenido[:50]
+
+class Respuesta(models.Model):
+    pregunta = models.OneToOneField(Pregunta, on_delete=models.CASCADE, related_name='respuesta')
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    contenido = models.TextField(max_length=300)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return self.contenido[:50]
+
+class ResenaVendedor(models.Model):
+    vendedor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='resenas_recibidas')
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='resenas_vendedores')
+    calificacion = models.IntegerField(choices=[(i, i) for i in range(1, 6)])
+    comentario = models.TextField(blank=True, max_length=500)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_modificacion = models.DateTimeField(auto_now=True)
+    class Meta:
+        unique_together = ('vendedor', 'usuario')
+        ordering = ['-fecha_creacion']
+    def __str__(self):
+        return f"{self.usuario.username} → {self.vendedor.username} ({self.calificacion}★)"

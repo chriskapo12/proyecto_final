@@ -1,12 +1,17 @@
 {% extends 'tienda/base.html' %}
 
-{% block title %}Mi Carrito - Bebidas Oeste{% endblock %}
+{% block title %}Mi Carrito - LinkOeste{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-lg-10">
     <h2 class="text-center mb-4 fw-bold text-dark"><i class="bi bi-cart3"></i> Tu Carrito</h2>
-
+    <div class="alert alert-success d-flex align-items-center gap-2 mb-4" role="alert">
+      <i class="bi bi-shield-check fs-5"></i>
+      <div>
+        Compra protegida: el pago se libera al confirmar recepción. Usa vendedores con correo verificado.
+      </div>
+    </div>
     {% if items %}
     <div class="card border-0 shadow-sm mb-4">
       <div class="card-body p-0">

@@ -1,71 +1,147 @@
 {% extends 'tienda/base.html' %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
         <div class="card border-0 shadow-lg">
             <div class="card-body p-4 p-lg-5">
-                <h2 class="text-center text-success mb-4 fw-bold">
-                    {{ form.nombre }}
-                    {% if form.nombre.errors %}
-                    <div class="text-danger small mt-1">{{ form.nombre.errors.0 }}</div>
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div>
+                        <h2 class="fw-bold text-dark mb-1"><i class="bi bi-bag-plus me-2 text-success"></i>Publicar Producto</h2>
+                        <div class="text-muted">Completa los campos para listar tu artículo en LinkOeste</div>
+                    </div>
+                    <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">Seguro y rápido</span>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" class="mt-3" id="form-publicar">
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger d-flex align-items-start" role="alert">
+                        <div class="flex-grow-1">
+                            <strong class="d-block mb-2">Revisá estos campos:</strong>
+                            <ul class="mb-0">
+                                {% if form.nombre.errors %}
+                                <li><a href="#" class="error-link text-danger" data-step="1" data-target="{{ form.nombre.id_for_label }}">Nombre: {{ form.nombre.errors.0 }}</a></li>
+                                {% endif %}
+                                {% if form.categoria.errors %}
+                                <li><a href="#" class="error-link text-danger" data-step="1" data-target="{{ form.categoria.id_for_label }}">Categoría: {{ form.categoria.errors.0 }}</a></li>
+                                {% endif %}
+                                {% if form.ubicacion.errors %}
+                                <li><a href="#" class="error-link text-danger" data-step="1" data-target="{{ form.ubicacion.id_for_label }}">Ubicación: {{ form.ubicacion.errors.0 }}</a></li>
+                                {% endif %}
+                                {% if form.descripcion.errors %}
+                                <li><a href="#" class="error-link text-danger" data-step="2" data-target="{{ form.descripcion.id_for_label }}">Descripción: {{ form.descripcion.errors.0 }}</a></li>
+                                {% endif %}
+                                {% if form.precio.errors %}
+                                <li><a href="#" class="error-link text-danger" data-step="2" data-target="{{ form.precio.id_for_label }}">Precio: {{ form.precio.errors.0 }}</a></li>
+                                {% endif %}
+                                {% if form.imagen.errors %}
+                                <li><a href="#" class="error-link text-danger" data-step="3" data-target="{{ form.imagen.id_for_label }}">Imagen: {{ form.imagen.errors.0 }}</a></li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
                     {% endif %}
-            </div>
 
-            <!-- Descripción -->
-            <div class="mb-3">
-                <label for="{{ form.descripcion.id_for_label }}" class="form-label fw-bold">
-                    <i class="bi bi-card-text me-1"></i> Descripción
-                </label>
-                {{ form.descripcion }}
-                {% if form.descripcion.errors %}
-                <div class="text-danger small mt-1">{{ form.descripcion.errors.0 }}</div>
-                {% endif %}
-            </div>
-
-            <!-- Precio -->
-            <div class="mb-3">
-                <label for="{{ form.precio.id_for_label }}" class="form-label fw-bold">
-                    <i class="bi bi-currency-dollar me-1"></i> Precio
-                </label>
-                <div class="input-group">
-                    <span class="input-group-text">$</span>
-                    {{ form.precio }}
-                </div>
-                {% if form.precio.errors %}
-                <div class="text-danger small mt-1">{{ form.precio.errors.0 }}</div>
-                {% endif %}
-            </div>
-
-            <!-- Imagen -->
-            <div class="mb-4">
-                <label for="{{ form.imagen.id_for_label }}" class="form-label fw-bold">
-                    <i class="bi bi-image me-1"></i> Imagen del producto
-                </label>
-                <div class="d-flex align-items-center gap-3">
-                    <div class="flex-grow-1">
-                        {{ form.imagen }}
-                        {% if form.imagen.errors %}
-                        <div class="text-danger small mt-1">{{ form.imagen.errors.0 }}</div>
-                        {% endif %}
+                    <div class="mb-4">
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 33%;" id="wizard-progress"></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <div id="wizard-step-label" class="small text-muted fw-semibold">Paso 1 de 3</div>
+                        </div>
                     </div>
-                    <div id="preview-container" class="d-none rounded overflow-hidden border shadow-sm"
-                        style="width: 80px; height: 80px;">
-                        <img id="preview-image" src="#" alt="Vista previa" class="w-100 h-100 object-fit-cover">
-                    </div>
-                </div>
-            </div>
 
-            <!-- Botones -->
-            <div class="d-flex gap-3 pt-2">
-                <a href="{% url 'tienda:productos' %}" class="btn btn-outline-secondary flex-grow-1 py-2 fw-bold">
-                    Cancelar
-                </a>
-                <button type="submit" class="btn btn-success flex-grow-1 py-2 fw-bold shadow-sm">
-                    <i class="bi bi-check-lg me-2"></i> Publicar Producto
-                </button>
-            </div>
-            </form>
+                    <div id="step-1">
+                        <div class="mb-3 form-floating">
+                            {{ form.nombre }}
+                            <label for="{{ form.nombre.id_for_label }}">Nombre del producto</label>
+                            {% if form.nombre.errors %}<div class="text-danger small mt-1">{{ form.nombre.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="mb-3 form-floating">
+                            {{ form.categoria }}
+                            <label for="{{ form.categoria.id_for_label }}">Categoría</label>
+                            {% if form.categoria.errors %}<div class="text-danger small mt-1">{{ form.categoria.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="mb-3 form-floating">
+                            {{ form.ubicacion }}
+                            <label for="{{ form.ubicacion.id_for_label }}">Ubicación de publicación</label>
+                            {% if form.ubicacion.errors %}<div class="text-danger small mt-1">{{ form.ubicacion.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <!-- Mapa -->
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Ubicación exacta (opcional)</label>
+                            <div id="map-selector" style="height: 250px; width: 100%; border-radius: 8px; z-index: 1;"></div>
+                            <small class="text-muted d-block mt-1">Haz clic en el mapa para marcar la zona.</small>
+                            {{ form.latitud }}
+                            {{ form.longitud }}
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-success px-4" id="btn-next-1">Siguiente</button>
+                        </div>
+                    </div>
+
+                    <div id="step-2" class="d-none">
+                        <div class="mb-3 form-floating">
+                            {{ form.descripcion }}
+                            <label for="{{ form.descripcion.id_for_label }}">Descripción</label>
+                            {% if form.descripcion.errors %}<div class="text-danger small mt-1">{{ form.descripcion.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.precio.id_for_label }}" class="form-label fw-bold">
+                                Precio
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                {{ form.precio }}
+                            </div>
+                            {% if form.precio.errors %}<div class="text-danger small mt-1">{{ form.precio.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="mb-3 form-floating">
+                            {{ form.stock }}
+                            <label for="{{ form.stock.id_for_label }}">Stock disponible</label>
+                            {% if form.stock.errors %}<div class="text-danger small mt-1">{{ form.stock.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary px-4" id="btn-prev-2">Atrás</button>
+                            <button type="button" class="btn btn-success px-4" id="btn-next-2">Siguiente</button>
+                        </div>
+                    </div>
+
+                    <div id="step-3" class="d-none">
+                        <div class="mb-4">
+                            <label for="{{ form.imagen.id_for_label }}" class="form-label fw-bold">Imagen del producto</label>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="flex-grow-1">
+                                    {{ form.imagen }}
+                                    {% if form.imagen.errors %}<div class="text-danger small mt-1">{{ form.imagen.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div id="preview-container" class="d-none rounded overflow-hidden border shadow-sm" style="width: 100px; height: 100px;">
+                                    <img id="preview-image" src="#" alt="Vista previa" class="w-100 h-100 object-fit-cover">
+                                </div>
+                            </div>
+                            <small class="text-muted d-block mt-2">Formatos permitidos: JPG, PNG. Tamaño recomendado 800×800px.</small>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary px-4" id="btn-prev-3">Atrás</button>
+                            <button type="submit" class="btn btn-success px-4">Publicar Producto</button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3 pt-2">
+                        <a href="{% url 'tienda:productos' %}" class="btn btn-outline-secondary flex-grow-1 py-2 fw-bold">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
         </div>
     </div>
 </div>
@@ -73,6 +149,21 @@
 
 <style>
     /* Estilos para los campos generados por Django */
+    /* Leaflet fix for Bootstrap img max-width */
+    .leaflet-pane img, 
+    .leaflet-tile, 
+    .leaflet-marker-icon, 
+    .leaflet-marker-shadow {
+        max-width: none !important;
+        max-height: none !important;
+    }
+
+    #map-selector {
+        z-index: 1;
+        position: relative;
+        overflow: hidden;
+    }
+
     input[type="text"],
     input[type="number"],
     textarea,
@@ -131,6 +222,11 @@
         color: #f8f9fa !important;
     }
 
+    .card .badge { border-radius: 8px; font-weight: 600; }
+
+    .progress { background-color: #e9ecef; }
+    #wizard-progress { transition: width .2s ease; }
+
     [data-bs-theme="dark"] input,
     [data-bs-theme="dark"] textarea,
     [data-bs-theme="dark"] select {
@@ -149,12 +245,123 @@
 </style>
 
 <script>
-    // Vista previa de imagen
     document.addEventListener('DOMContentLoaded', function () {
+        const step1 = document.getElementById('step-1');
+        const step2 = document.getElementById('step-2');
+        const step3 = document.getElementById('step-3');
+        const progress = document.getElementById('wizard-progress');
+        const stepLabel = document.getElementById('wizard-step-label');
+        const next1 = document.getElementById('btn-next-1');
+        const next2 = document.getElementById('btn-next-2');
+        const prev2 = document.getElementById('btn-prev-2');
+        const prev3 = document.getElementById('btn-prev-3');
+        const nombreInput = document.getElementById('{{ form.nombre.id_for_label }}');
+        const precioInput = document.getElementById('{{ form.precio.id_for_label }}');
+
+        // Inicializar Leaflet
+        if (typeof L !== 'undefined' && document.getElementById('map-selector')) {
+            // Coordenadas de Argentina (Centro aproximado)
+            var map = L.map('map-selector').setView([-38.416097, -63.616672], 4);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            var marker;
+            const latInput = document.getElementById('{{ form.latitud.id_for_label }}');
+            const lonInput = document.getElementById('{{ form.longitud.id_for_label }}');
+
+            // Si ya hay valores (por error de validación), restaurar marcador
+            if (latInput && latInput.value && lonInput && lonInput.value) {
+                const savedLat = parseFloat(latInput.value.replace(',', '.'));
+                const savedLon = parseFloat(lonInput.value.replace(',', '.'));
+                if (!isNaN(savedLat) && !isNaN(savedLon)) {
+                    marker = L.marker([savedLat, savedLon]).addTo(map);
+                    map.setView([savedLat, savedLon], 10);
+                }
+            }
+
+            map.on('click', function(e) {
+                if (marker) {
+                    map.removeLayer(marker);
+                }
+                marker = L.marker(e.latlng).addTo(map);
+                if (latInput) latInput.value = e.latlng.lat;
+                if (lonInput) lonInput.value = e.latlng.lng;
+            });
+
+            // Función para corregir renderizado al mostrar el tab
+            window.invalidateLeaflet = function() {
+                map.invalidateSize();
+            };
+        }
+
+        // Wizard navigation
+        const totalSteps = 3;
+        let currentStep = 1;
+
+        function go(step) {
+            step1.classList.toggle('d-none', step !== 1);
+            step2.classList.toggle('d-none', step !== 2);
+            step3.classList.toggle('d-none', step !== 3);
+            progress.style.width = step === 1 ? '33%' : step === 2 ? '66%' : '100%';
+            if (stepLabel) {
+                stepLabel.textContent = 'Paso ' + step + ' de 3';
+            }
+            
+            // Corregir mapa si volvemos al paso 1 y es Leaflet
+            if (step === 1 && typeof window.invalidateLeaflet === 'function') {
+                setTimeout(window.invalidateLeaflet, 200);
+            }
+        }
+
+        function hasErrors(container) {
+            return !!container.querySelector('.text-danger');
+        }
+        (function initStep() {
+            let initialStep = 1;
+            if (hasErrors(step1)) {
+                initialStep = 1;
+            } else if (hasErrors(step2)) {
+                initialStep = 2;
+            } else if (hasErrors(step3)) {
+                initialStep = 3;
+            }
+            go(initialStep);
+        })();
+        document.querySelectorAll('.error-link').forEach(function(a) {
+            a.addEventListener('click', function(e) {
+                e.preventDefault();
+                var step = parseInt(this.dataset.step, 10);
+                var targetId = this.dataset.target;
+                go(step);
+                var el = document.getElementById(targetId);
+                if (el) { el.focus(); }
+            });
+        });
+        next1.addEventListener('click', function () {
+            if (nombreInput && nombreInput.value.trim().length < 3) {
+                nombreInput.focus();
+                return;
+            }
+            go(2);
+        });
+        next2.addEventListener('click', function () {
+            if (precioInput) {
+                const v = parseFloat(precioInput.value.replace(',', '.'));
+                if (isNaN(v) || v <= 0) {
+                    precioInput.focus();
+                    return;
+                }
+            }
+            go(3);
+        });
+        prev2.addEventListener('click', function () { go(1); });
+        prev3.addEventListener('click', function () { go(2); });
+
         const inputImagen = document.querySelector('input[type="file"]');
         const previewContainer = document.getElementById('preview-container');
         const previewImage = document.getElementById('preview-image');
-
         if (inputImagen) {
             inputImagen.addEventListener('change', function () {
                 const file = this.files[0];
@@ -168,6 +375,11 @@
                 } else {
                     previewContainer.classList.add('d-none');
                 }
+            });
+        }
+        if (precioInput) {
+            precioInput.addEventListener('input', function () {
+                this.value = this.value.replace(/[^0-9.,]/g, '').replace(',', '.');
             });
         }
     });

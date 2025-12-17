@@ -1,0 +1,38 @@
+{% extends 'tienda/base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-5">
+                    <div class="text-center mb-5">
+                        <div class="text-success display-1 mb-3"><i class="bi bi-shield-check"></i></div>
+                        <h1 class="fw-bold">Compra Protegida</h1>
+                        <p class="lead text-muted">Tu seguridad es nuestra prioridad en LinkOeste</p>
+                    </div>
+
+                    <div class="mb-5">
+                        <h3 class="fw-bold mb-3"><i class="bi bi-cash-coin me-2 text-primary"></i>Pago Seguro</h3>
+                        <p>Cuando realizas una compra en LinkOeste, tu dinero está protegido. No liberamos el pago al vendedor hasta que confirmas que recibiste tu producto en las condiciones esperadas.</p>
+                    </div>
+
+                    <div class="mb-5">
+                        <h3 class="fw-bold mb-3"><i class="bi bi-box-seam me-2 text-primary"></i>Garantía de Satisfacción</h3>
+                        <p>Si el producto que recibiste no es lo que esperabas o tiene algún defecto, podés iniciar un reclamo dentro de los 30 días posteriores a la compra. Te ayudaremos a resolver el problema o te devolveremos tu dinero.</p>
+                    </div>
+
+                    <div class="mb-5">
+                        <h3 class="fw-bold mb-3"><i class="bi bi-people me-2 text-primary"></i>Vendedores Verificados</h3>
+                        <p>Trabajamos constantemente para verificar la identidad y reputación de nuestros vendedores. Podés ver las calificaciones y opiniones de otros compradores antes de realizar tu pedido.</p>
+                    </div>
+
+                    <div class="text-center mt-5">
+                        <a href="{% url 'tienda:productos' %}" class="btn btn-primary btn-lg px-5">Explorar Productos</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

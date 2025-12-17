@@ -1,6 +1,6 @@
 {% extends 'tienda/base.html' %}
 
-{% block title %}Mi Perfil - Bebidas Oeste{% endblock %}
+{% block title %}Mi Perfil - LinkOeste{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -21,7 +21,12 @@
                     </div>
 
                     <div class="text-center text-md-start flex-grow-1">
-                        <h2 class="display-5 fw-bold mb-2">{{ user.username }}</h2>
+                        <h2 class="display-5 fw-bold mb-2">
+                            {{ user.username }}
+                            {% if email_verificado %}
+                            <span class="badge bg-success ms-2"><i class="bi bi-shield-check"></i> Verificado</span>
+                            {% endif %}
+                        </h2>
                         <p class="lead mb-3 opacity-75">{{ perfil.bio|default:"Sin biografía" }}</p>
 
                         <div class="d-flex justify-content-center justify-content-md-start gap-4 mb-3">
