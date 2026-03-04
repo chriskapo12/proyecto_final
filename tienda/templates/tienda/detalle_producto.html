@@ -11,14 +11,14 @@
 
 {% block content %}
 <div class="row justify-content-center py-4">
-    <div class="col-lg-10">
+    <div class="col-12 col-lg-12">
         <div class="card border-0 shadow-lg overflow-hidden">
             <div class="row g-0">
                 <!-- Imagen del producto -->
-                <div class="col-md-6 bg-light d-flex align-items-center justify-content-center p-4">
+                <div class="col-md-7 bg-light d-flex align-items-center justify-content-center p-4">
                     {% if producto.imagen %}
                     <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="img-fluid rounded shadow-sm"
-                        style="max-height: 500px; object-fit: contain;">
+                        style="width:100%; height:auto; max-height: 500px; object-fit: contain;">
                     {% else %}
                     <div class="text-center text-muted">
                         <i class="bi bi-card-image display-1 opacity-25"></i>
@@ -28,7 +28,7 @@
                 </div>
 
                 <!-- Información del producto -->
-                <div class="col-md-6">
+                <div class="col-md-5">
                     <div class="card-body p-4 p-lg-5 d-flex flex-column h-100">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <span class="badge bg-info bg-opacity-10 text-info rounded-pill px-3 py-2">{{ categoria_label|default:producto.get_categoria_display }}</span>
@@ -44,7 +44,7 @@
                             {% endif %}
                         </div>
 
-                        <h1 class="display-5 fw-bold text-dark mb-3">{{ producto.nombre }}</h1>
+                        <h1 class="display-6 fw-bold text-dark mb-3" style="font-size:2rem;">{{ producto.nombre }}</h1>
 
                         <!-- Calificación -->
                         {% if promedio_calificacion %}
@@ -209,8 +209,8 @@
         </div>
 
         <!-- Sección de Reseñas -->
-        <div class="col-lg-10 mt-4">
-            <div class="card border-0 shadow-lg">
+        <div class="col-12 mt-4">
+            <div class="card border-0 shadow-lg overflow-hidden">
                 <div class="card-header bg-white py-3">
                     <h3 class="mb-0"><i class="bi bi-star"></i> Reseñas y Calificaciones</h3>
                 </div>
@@ -331,60 +331,6 @@
 </div>
 {% endif %}
 
-<!-- Preguntas y Respuestas -->
-<div class="container py-4">
-    <div class="row">
-        <div class="col-lg-10">
-            <div class="card border-0 shadow-lg">
-                <div class="card-header bg-white py-3">
-                    <h3 class="mb-0"><i class="bi bi-chat-dots"></i> Preguntas y respuestas</h3>
-                </div>
-                <div class="card-body p-4">
-                    {% if user.is_authenticated and user != producto.usuario %}
-                    <form method="post" action="{% url 'tienda:agregar_pregunta' producto.id %}" class="mb-4">
-                        {% csrf_token %}
-                        <div class="input-group">
-                            <input type="text" name="contenido" class="form-control" placeholder="Escribe una pregunta">
-                            <button class="btn btn-primary" type="submit"><i class="bi bi-send"></i> Preguntar</button>
-                        </div>
-                    </form>
-                    {% endif %}
-                    {% if preguntas %}
-                    <div>
-                        {% for p in preguntas %}
-                        <div class="mb-3 p-3 border rounded">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <strong>{{ p.usuario.username }}</strong>
-                                <small class="text-muted">{{ p.fecha_creacion|date:"d/m/Y H:i" }}</small>
-                            </div>
-                            <div class="mt-2">{{ p.contenido }}</div>
-                            <div class="mt-3">
-                                {% if p.respuesta %}
-                                <div class="p-3 bg-light rounded">
-                                    <strong>Respuesta:</strong>
-                                    <div class="mt-1">{{ p.respuesta.contenido }}</div>
-                                </div>
-                                {% elif user.is_authenticated and user == producto.usuario %}
-                                <form method="post" action="{% url 'tienda:responder_pregunta' p.id %}">
-                                    {% csrf_token %}
-                                    <div class="input-group">
-                                        <input type="text" name="contenido" class="form-control" placeholder="Responder como vendedor">
-                                        <button class="btn btn-success" type="submit"><i class="bi bi-reply"></i> Responder</button>
-                                    </div>
-                                </form>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="text-center text-muted py-3">Aún no hay preguntas</div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <style>
     /* Sistema de calificación con estrellas */

@@ -185,12 +185,6 @@
                         <a class="nav-link" href="{% url 'tienda:productos' %}">Productos</a>
                     </li>
 
-                    <!-- Theme Toggle -->
-                    <li class="nav-item">
-                        <button class="btn btn-link nav-link" id="theme-toggle">
-                            <i class="bi bi-moon-stars-fill"></i>
-                        </button>
-                    </li>
 
                     {% if user.is_authenticated %}
                     <!-- Notificaciones -->
@@ -376,23 +370,6 @@
         function getCsrf() {
             return getCookie('csrftoken') || '{{ csrf_token }}';
         }
-        // Dark Mode Toggle
-        const themeToggle = document.getElementById('theme-toggle');
-        const html = document.documentElement;
-        const icon = themeToggle.querySelector('i');
-
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = html.getAttribute('data-bs-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            html.setAttribute('data-bs-theme', newTheme);
-            icon.className = newTheme === 'light' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
-            localStorage.setItem('theme', newTheme);
-        });
-
-        // Cargar tema guardado
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        html.setAttribute('data-bs-theme', savedTheme);
-        if (savedTheme === 'dark') icon.className = 'bi bi-sun-fill';
 
         // Lógica del Carrito
         const offcanvasElement = document.getElementById('offcanvasCarrito');

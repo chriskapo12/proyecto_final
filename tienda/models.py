@@ -34,25 +34,13 @@ def guardar_perfil_usuario(sender, instance, **kwargs):
 class Producto(models.Model):
 
     CATEGORIAS = [
-        ('vino', 'Vino'),
-        ('cerveza', 'Cerveza'),
-        ('licor', 'Licor'),
-        ('energizante', 'Energizante'),
-        ('blanca', 'Bebidas Blancas'),
-        ('snack', 'Snacks'),
-        ('golosina', 'Golosinas'),
-        ('limpieza', 'Limpieza'),
-        ('hogar', 'Hogar'),
-        ('electronica', 'Electrónica'),
-        ('ropa', 'Ropa'),
-        ('calzado', 'Calzado'),
-        ('perfumeria', 'Perfumería'),
-        ('mascotas', 'Mascotas'),
-        ('libros', 'Libros'),
-        ('herramientas', 'Herramientas'),
-        ('juguetes', 'Juguetes'),
-        ('gaming', 'Gaming'),
-        ('otros', 'Otros'),
+        ('monitores', 'Monitores'),
+        ('teclados', 'Teclados'),
+        ('mouses', 'Mouses'),
+        ('notebooks', 'Notebooks'),
+        ('sillas_gamers', 'Sillas Gamers'),
+        ('placas_de_videos', 'Placas de Videos'),
+        ('gabinetes', 'Gabinetes'),
     ]
 
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)  # quién lo publicó
@@ -60,7 +48,7 @@ class Producto(models.Model):
     descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
-    categoria = models.CharField(max_length=20, choices=CATEGORIAS, default='licor')
+    categoria = models.CharField(max_length=20, choices=CATEGORIAS, default='monitores')
     ubicacion = models.CharField(max_length=100, blank=True, help_text="Ej: Palermo, Buenos Aires")
     latitud = models.FloatField(blank=True, null=True)
     longitud = models.FloatField(blank=True, null=True)
