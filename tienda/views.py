@@ -8,6 +8,7 @@ import json
 import mercadopago
 from django.conf import settings
 from django.db.models import Avg, Count, Q
+from django.urls import reverse
 
 from .models import Producto, Carrito, CarritoItem, Favorito, Resena, Pedido, ItemPedido, Cupon, Pregunta, Respuesta
 from .forms import ProductoForm
@@ -268,8 +269,12 @@ def eliminar_producto_view(request, producto_id):
     return redirect('tienda:productos')
 
 # 🛍 Agregar producto al carrito
-@login_required
 def agregar_al_carrito(request, producto_id):
+    if not request.user.is_authenticated:
+        messages.info(request, 'Debes iniciar sesión o registrarte para empezar a comprar.')
+        login_url = f"{reverse('tienda:login')}?next={request.path}"
+        return redirect(login_url)
+
     producto = get_object_or_404(Producto, id=producto_id)
     carrito, _ = Carrito.objects.get_or_create(usuario=request.user)
     item, creado = CarritoItem.objects.get_or_create(carrito=carrito, producto=producto)
